@@ -18,8 +18,10 @@ const SYSTEM_PROMPT = `あなたはトレイルランニング・耐久系競技
 - ウォーミングアップから本セットへの順序（負荷の軽い種目から重い種目へ）
 - 種目数・量は推定実施時間（30〜60分）に収まるように調整
 - 全て日本語。種目名はカタカナで記載
+- category は部位基準: lower_body/upper_body/core/full_body/mobility/other
 
-出力は構造化JSONで返してください。`
+必ず以下のJSON形式のみで応答してください。前後に説明文や\`\`\`は不要です:
+{"name":"テンプレート名","description":"概要","category":"lower_body","estimatedDurationMin":40,"exercises":[{"name":"種目名","category":"lower_body","targetMuscles":["筋肉"],"defaultSets":3,"defaultReps":10,"defaultDurationSec":null,"defaultRestSec":60,"defaultWeight":null,"instructions":"フォームのポイント"}]}`
 
 export async function POST(req: NextRequest) {
   const auth = req.headers.get('authorization')
@@ -49,57 +51,6 @@ export async function POST(req: NextRequest) {
       max_tokens: 4000,
       system: systemBlocks,
       messages: [{ role: 'user', content: body.prompt }],
-      output_config: {
-        format: {
-          type: 'json_schema',
-          schema: {
-            type: 'object',
-            properties: {
-              name: { type: 'string' },
-              description: { type: 'string' },
-              category: {
-                type: 'string',
-                enum: ['lower_body', 'upper_body', 'core', 'full_body', 'mobility', 'other'],
-              },
-              estimatedDurationMin: { type: 'integer' },
-              exercises: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    name: { type: 'string' },
-                    category: {
-                      type: 'string',
-                      enum: ['bodyweight', 'dumbbell', 'barbell', 'resistance_band', 'machine', 'other'],
-                    },
-                    targetMuscles: { type: 'array', items: { type: 'string' } },
-                    defaultSets: { type: 'integer' },
-                    defaultReps: { type: ['integer', 'null'] },
-                    defaultDurationSec: { type: ['integer', 'null'] },
-                    defaultRestSec: { type: 'integer' },
-                    defaultWeight: { type: ['number', 'null'] },
-                    instructions: { type: 'string' },
-                  },
-                  required: [
-                    'name',
-                    'category',
-                    'targetMuscles',
-                    'defaultSets',
-                    'defaultReps',
-                    'defaultDurationSec',
-                    'defaultRestSec',
-                    'defaultWeight',
-                    'instructions',
-                  ],
-                  additionalProperties: false,
-                },
-              },
-            },
-            required: ['name', 'description', 'category', 'estimatedDurationMin', 'exercises'],
-            additionalProperties: false,
-          },
-        },
-      },
     })
 
     const textBlock = response.content.find((b) => b.type === 'text')

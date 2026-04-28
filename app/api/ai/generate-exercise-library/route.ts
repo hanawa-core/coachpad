@@ -18,7 +18,8 @@ const SYSTEM_PROMPT = `あなたはトレイルランニング・耐久系競技
 - フォームのポイントを明確に。怪我リスクのある種目では特に注意点を含める
 - 全て日本語。種目名はカタカナで記載
 
-出力は構造化JSONで返してください。`
+必ず以下のJSON形式のみで応答してください。前後に説明文や\`\`\`は不要です:
+{"exercises":[{"name":"種目名","category":"lower_body","targetMuscles":["筋肉名"],"instructions":"フォームのポイント"}]}`
 
 export async function POST(req: NextRequest) {
   // 認証
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
     const client = getAnthropicClient()
     const response = await client.messages.create({
       model: MODEL_STANDARD,
-      max_tokens: 4000,
+      max_tokens: 6000,
       system: SYSTEM_PROMPT,
       messages: [
         {
@@ -55,40 +56,6 @@ export async function POST(req: NextRequest) {
           content: `以下の要望に合わせて種目を ${body.count} 個提案してください:\n\n${body.prompt}`,
         },
       ],
-      output_config: {
-        format: {
-          type: 'json_schema',
-          schema: {
-            type: 'object',
-            properties: {
-              exercises: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    name: { type: 'string' },
-                    category: {
-                      type: 'string',
-                      enum: ['lower_body', 'upper_body', 'core', 'full_body', 'mobility', 'other'],
-                    },
-                    targetMuscles: { type: 'array', items: { type: 'string' } },
-                    instructions: { type: 'string' },
-                  },
-                  required: [
-                    'name',
-                    'category',
-                    'targetMuscles',
-                    'instructions',
-                  ],
-                  additionalProperties: false,
-                },
-              },
-            },
-            required: ['exercises'],
-            additionalProperties: false,
-          },
-        },
-      },
     })
 
     // テキストブロックから JSON を取り出してパース
