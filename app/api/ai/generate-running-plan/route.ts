@@ -191,7 +191,7 @@ ${wellnessSummary}
     const response = await client.beta.messages.create(
       {
         model: AI_MODEL,
-        max_tokens: 32000,
+        max_tokens: 8000,
         system: systemBlocks,
         betas: ['files-api-2025-04-14'],
         messages: [{ role: 'user', content: userContent }],

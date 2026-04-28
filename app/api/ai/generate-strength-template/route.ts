@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     const systemBlocks = await buildSystemPromptWithCoach(userId, SYSTEM_PROMPT)
     const response = await client.messages.create({
       model: MODEL_STANDARD,
-      max_tokens: 16000,
+      max_tokens: 4000,
       system: systemBlocks,
       messages: [{ role: 'user', content: body.prompt }],
       output_config: {
