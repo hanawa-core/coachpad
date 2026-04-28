@@ -11,6 +11,7 @@ import { CalendarMonthView } from '@/components/calendar/CalendarMonthView'
 import { FitnessChart } from '@/components/dashboard/FitnessChart'
 import { WellnessChart } from '@/components/wellness/WellnessChart'
 import { PlanBadge } from '@/components/ui/PlanBadge'
+import { RunningSettingsPanel } from '@/components/athletes/RunningSettingsPanel'
 import { PLAN_CONFIG, type AthleteCache, type AthletePlan } from '@/types'
 
 export default function AthleteDetailPage() {
@@ -120,6 +121,8 @@ export default function AthleteDetailPage() {
             </div>
           </div>
         )}
+
+        <RunningSettingsPanel athleteId={id} />
 
         <FitnessChart athleteId={id} />
 

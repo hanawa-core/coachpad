@@ -7,20 +7,15 @@ import { ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { TopBar } from '@/components/layout/TopBar'
 import { createExerciseLibraryItem } from '@/lib/firebase/firestore'
-import { EXERCISE_CATEGORY_LABELS, type ExerciseCategory } from '@/types'
+import { STRENGTH_CATEGORY_LABELS, type StrengthCategory } from '@/types'
 
 export default function NewExercisePage() {
   const router = useRouter()
   const { user } = useAuth()
 
   const [name, setName] = useState('')
-  const [category, setCategory] = useState<ExerciseCategory>('bodyweight')
+  const [category, setCategory] = useState<StrengthCategory>('lower_body')
   const [targetMuscles, setTargetMuscles] = useState('')
-  const [sets, setSets] = useState('3')
-  const [reps, setReps] = useState('10')
-  const [restSec, setRestSec] = useState('60')
-  const [weight, setWeight] = useState('')
-  const [duration, setDuration] = useState('')
   const [instructions, setInstructions] = useState('')
   const [videoUrl, setVideoUrl] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -38,11 +33,6 @@ export default function NewExercisePage() {
           .split(/[,、，]/)
           .map((s) => s.trim())
           .filter(Boolean),
-        defaultSets: parseInt(sets) || 3,
-        defaultReps: reps ? parseInt(reps) : null,
-        defaultDurationSec: duration ? parseInt(duration) : null,
-        defaultRestSec: parseInt(restSec) || 60,
-        defaultWeight: weight ? parseFloat(weight) : null,
         instructions,
         videoUrl: videoUrl || null,
         imageUrl: null,
@@ -83,16 +73,14 @@ export default function NewExercisePage() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-300">カテゴリ</label>
+              <label className="mb-1 block text-xs font-medium text-slate-300">カテゴリ（部位）</label>
               <select
                 value={category}
-                onChange={(e) => setCategory(e.target.value as ExerciseCategory)}
+                onChange={(e) => setCategory(e.target.value as StrengthCategory)}
                 className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
               >
-                {Object.entries(EXERCISE_CATEGORY_LABELS).map(([k, v]) => (
-                  <option key={k} value={k}>
-                    {v}
-                  </option>
+                {Object.entries(STRENGTH_CATEGORY_LABELS).map(([k, v]) => (
+                  <option key={k} value={k}>{v}</option>
                 ))}
               </select>
             </div>
@@ -103,59 +91,6 @@ export default function NewExercisePage() {
                 value={targetMuscles}
                 onChange={(e) => setTargetMuscles(e.target.value)}
                 placeholder="例: 大腿四頭筋、臀筋"
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate-300">セット数</label>
-              <input
-                type="number"
-                value={sets}
-                onChange={(e) => setSets(e.target.value)}
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate-300">回数</label>
-              <input
-                type="number"
-                value={reps}
-                onChange={(e) => setReps(e.target.value)}
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate-300">休息(秒)</label>
-              <input
-                type="number"
-                value={restSec}
-                onChange={(e) => setRestSec(e.target.value)}
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate-300">時間(秒・任意)</label>
-              <input
-                type="number"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-                placeholder="プランクなど時間制の場合"
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate-300">推奨重量(kg・任意)</label>
-              <input
-                type="number"
-                step="0.5"
-                value={weight}
-                onChange={(e) => setWeight(e.target.value)}
                 className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
               />
             </div>

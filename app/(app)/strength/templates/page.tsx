@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Plus, Dumbbell, Copy } from 'lucide-react'
+import { Plus, Dumbbell, Copy, Pencil, Trash2, Sparkles } from 'lucide-react'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { TopBar } from '@/components/layout/TopBar'
-import { getStrengthTemplates, duplicateStrengthTemplate } from '@/lib/firebase/firestore'
+import { getStrengthTemplates, duplicateStrengthTemplate, deleteStrengthTemplate } from '@/lib/firebase/firestore'
 import type { StrengthTemplate } from '@/types'
 import { STRENGTH_CATEGORY_LABELS } from '@/types'
 
@@ -16,6 +16,7 @@ export default function StrengthTemplatesPage() {
   const [templates, setTemplates] = useState<StrengthTemplate[]>([])
   const [loading, setLoading] = useState(true)
   const [copying, setCopying] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -24,6 +25,19 @@ export default function StrengthTemplatesPage() {
       setLoading(false)
     })
   }, [user])
+
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!confirm('このプロトコルを削除しますか？')) return
+    setDeleting(id)
+    try {
+      await deleteStrengthTemplate(id)
+      setTemplates((prev) => prev.filter((t) => t.id !== id))
+    } finally {
+      setDeleting(null)
+    }
+  }
 
   const handleCopy = async (e: React.MouseEvent, id: string) => {
     e.preventDefault()
@@ -54,13 +68,20 @@ export default function StrengthTemplatesPage() {
     <>
       <TopBar title="筋トレメニュー" />
       <div className="p-6 space-y-4">
-        <div className="flex justify-end">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <Link
+            href="/strength/exercises/ai"
+            className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-500"
+          >
+            <Sparkles className="h-4 w-4" />
+            AIで生成
+          </Link>
           <Link
             href="/strength/templates/new"
             className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
           >
             <Plus className="h-4 w-4" />
-            新規テンプレート
+            新規作成
           </Link>
         </div>
 
@@ -89,14 +110,31 @@ export default function StrengthTemplatesPage() {
                     <p className="mt-2 text-sm text-slate-400 line-clamp-2">{t.description}</p>
                   )}
                 </Link>
-                <button
-                  onClick={(e) => handleCopy(e, t.id)}
-                  disabled={copying === t.id}
-                  className="absolute top-3 right-3 rounded-lg bg-slate-800 p-1.5 text-slate-400 hover:bg-slate-700 hover:text-white disabled:opacity-50"
-                  title="コピーして編集"
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                </button>
+                <div className="absolute top-3 right-3 flex items-center gap-1">
+                  <button
+                    onClick={(e) => handleCopy(e, t.id)}
+                    disabled={copying === t.id}
+                    className="rounded p-1.5 text-slate-500 hover:bg-slate-700 hover:text-white disabled:opacity-50"
+                    title="コピーして編集"
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/strength/templates/${t.id}/edit`) }}
+                    className="rounded p-1.5 text-slate-500 hover:bg-slate-700 hover:text-white"
+                    title="編集"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={(e) => handleDelete(e, t.id)}
+                    disabled={deleting === t.id}
+                    className="rounded p-1.5 text-slate-500 hover:bg-red-900/30 hover:text-red-400 disabled:opacity-50"
+                    title="削除"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>

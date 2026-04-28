@@ -12,7 +12,7 @@ import {
 } from '@/lib/firebase/firestore'
 import { YouTubeEmbed } from '@/components/strength/YouTubeEmbed'
 import type { ExerciseLibraryItem } from '@/types'
-import { EXERCISE_CATEGORY_LABELS } from '@/types'
+import { STRENGTH_CATEGORY_LABELS } from '@/types'
 
 export default function ExerciseLibraryPage() {
   const { user, profile } = useAuth()
@@ -96,9 +96,9 @@ export default function ExerciseLibraryPage() {
                   <div className="flex-1">
                     <h3 className="text-base font-semibold text-white">{ex.name}</h3>
                     <p className="mt-0.5 text-xs text-slate-500">
-                      {EXERCISE_CATEGORY_LABELS[ex.category]}
+                      {STRENGTH_CATEGORY_LABELS[ex.category] ?? ex.category}
                       {ex.targetMuscles.length > 0 && (
-                        <span> · {ex.targetMuscles.join('・')}</span>
+                        <span className="text-slate-400"> · {ex.targetMuscles.join('・')}</span>
                       )}
                     </p>
                   </div>
@@ -116,15 +116,6 @@ export default function ExerciseLibraryPage() {
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                </div>
-                <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-400">
-                  <span>セット: {ex.defaultSets}</span>
-                  {ex.defaultReps != null && <span>回数: {ex.defaultReps}</span>}
-                  {ex.defaultDurationSec != null && (
-                    <span>時間: {ex.defaultDurationSec}秒</span>
-                  )}
-                  <span>休息: {ex.defaultRestSec}秒</span>
-                  {ex.defaultWeight != null && <span>重量: {ex.defaultWeight}kg</span>}
                 </div>
                 {ex.instructions && (
                   <p className="mt-2 text-xs text-slate-300 line-clamp-3 whitespace-pre-wrap">

@@ -354,25 +354,27 @@ export interface CoachAiDocument {
 
 /**
  * 種目ライブラリ（コーチが登録する単独種目のストック）
+ * セット数・回数・重量・休息はメニュー作成時に設定するためライブラリには不要
  */
 export interface ExerciseLibraryItem {
   id: string
   coachId: string
   name: string
-  category: ExerciseCategory
+  /** 部位別カテゴリ */
+  category: StrengthCategory
   /** 部位タグ（複数可） */
   targetMuscles: string[]
-  /** デフォルトのセット数 */
-  defaultSets: number
-  defaultReps: number | null
-  defaultDurationSec: number | null
-  defaultRestSec: number
-  defaultWeight: number | null
   instructions: string
   videoUrl: string | null
   imageUrl: string | null
   createdAt: Timestamp
   updatedAt: Timestamp
+  // 後方互換のため optional で残す（既存データが壊れないよう）
+  defaultSets?: number
+  defaultReps?: number | null
+  defaultDurationSec?: number | null
+  defaultRestSec?: number
+  defaultWeight?: number | null
 }
 
 export interface StrengthTemplate {

@@ -14,10 +14,9 @@ const SYSTEM_PROMPT = `あなたはトレイルランニング・耐久系競技
 
 要件:
 - ランナーの実走力向上に直結する種目を優先（下半身・体幹・走動作の安定性）
-- 自体重・ダンベル・バンド・ジムマシン等、実施場所に応じて適切なカテゴリを選ぶ
+- カテゴリは部位基準: lower_body=下半身, upper_body=上半身, core=コア, full_body=全身, mobility=モビリティ, other=その他
 - フォームのポイントを明確に。怪我リスクのある種目では特に注意点を含める
 - 全て日本語。種目名はカタカナで記載
-- セット数・回数は典型的なランナー向けの設定（例: 3セット×10-15回）
 
 出力は構造化JSONで返してください。`
 
@@ -70,25 +69,15 @@ export async function POST(req: NextRequest) {
                     name: { type: 'string' },
                     category: {
                       type: 'string',
-                      enum: ['bodyweight', 'dumbbell', 'barbell', 'resistance_band', 'machine', 'other'],
+                      enum: ['lower_body', 'upper_body', 'core', 'full_body', 'mobility', 'other'],
                     },
                     targetMuscles: { type: 'array', items: { type: 'string' } },
-                    defaultSets: { type: 'integer' },
-                    defaultReps: { type: ['integer', 'null'] },
-                    defaultDurationSec: { type: ['integer', 'null'] },
-                    defaultRestSec: { type: 'integer' },
-                    defaultWeight: { type: ['number', 'null'] },
                     instructions: { type: 'string' },
                   },
                   required: [
                     'name',
                     'category',
                     'targetMuscles',
-                    'defaultSets',
-                    'defaultReps',
-                    'defaultDurationSec',
-                    'defaultRestSec',
-                    'defaultWeight',
                     'instructions',
                   ],
                   additionalProperties: false,

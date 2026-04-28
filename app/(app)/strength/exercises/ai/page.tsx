@@ -7,17 +7,12 @@ import { ArrowLeft, Sparkles, Check } from 'lucide-react'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { TopBar } from '@/components/layout/TopBar'
 import { createExerciseLibraryItem } from '@/lib/firebase/firestore'
-import { EXERCISE_CATEGORY_LABELS, type ExerciseCategory } from '@/types'
+import { STRENGTH_CATEGORY_LABELS, type StrengthCategory } from '@/types'
 
 interface GeneratedExercise {
   name: string
-  category: ExerciseCategory
+  category: StrengthCategory
   targetMuscles: string[]
-  defaultSets: number
-  defaultReps: number | null
-  defaultDurationSec: number | null
-  defaultRestSec: number
-  defaultWeight: number | null
   instructions: string
 }
 
@@ -98,11 +93,6 @@ export default function AIExerciseGeneratorPage() {
           name: ex.name,
           category: ex.category,
           targetMuscles: ex.targetMuscles,
-          defaultSets: ex.defaultSets,
-          defaultReps: ex.defaultReps,
-          defaultDurationSec: ex.defaultDurationSec,
-          defaultRestSec: ex.defaultRestSec,
-          defaultWeight: ex.defaultWeight,
           instructions: ex.instructions,
           videoUrl: null,
           imageUrl: null,
@@ -235,17 +225,10 @@ export default function AIExerciseGeneratorPage() {
                       <div className="flex-1">
                         <h4 className="text-sm font-semibold text-white">{ex.name}</h4>
                         <p className="mt-0.5 text-xs text-slate-500">
-                          {EXERCISE_CATEGORY_LABELS[ex.category]}
+                          {STRENGTH_CATEGORY_LABELS[ex.category] ?? ex.category}
                           {ex.targetMuscles.length > 0 && (
                             <span> · {ex.targetMuscles.join('・')}</span>
                           )}
-                        </p>
-                        <p className="mt-1 text-xs text-slate-400">
-                          {ex.defaultSets}セット
-                          {ex.defaultReps && ` × ${ex.defaultReps}回`}
-                          {ex.defaultDurationSec && ` × ${ex.defaultDurationSec}秒`}
-                          ・休息 {ex.defaultRestSec}秒
-                          {ex.defaultWeight != null && ` ・推奨 ${ex.defaultWeight}kg`}
                         </p>
                         <p className="mt-2 text-xs text-slate-300 whitespace-pre-wrap">
                           {ex.instructions}
