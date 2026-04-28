@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Sparkles, Check } from 'lucide-react'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { TopBar } from '@/components/layout/TopBar'
-import { createExerciseLibraryItem } from '@/lib/firebase/firestore'
+import { createExerciseLibraryItem, getExerciseLibrary } from '@/lib/firebase/firestore'
 import { STRENGTH_CATEGORY_LABELS, type StrengthCategory } from '@/types'
 
 interface GeneratedExercise {
@@ -35,6 +35,16 @@ export default function AIExerciseGeneratorPage() {
   const [exercises, setExercises] = useState<GeneratedExercise[]>([])
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [saving, setSaving] = useState(false)
+  const [existingNames, setExistingNames] = useState<Set<string>>(new Set())
+  const [savedCount, setSavedCount] = useState(0)
+  const [skippedCount, setSkippedCount] = useState(0)
+
+  useEffect(() => {
+    if (!user) return
+    getExerciseLibrary(user.uid).then((items) => {
+      setExistingNames(new Set(items.map((i) => i.name.trim().toLowerCase())))
+    })
+  }, [user])
 
   if (profile?.role !== 'coach') {
     return (
@@ -66,8 +76,18 @@ export default function AIExerciseGeneratorPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'エラーが発生しました')
       setExercises(data.exercises)
-      // デフォルトで全選択
-      setSelected(new Set(data.exercises.map((_: any, i: number) => i)))
+      setSavedCount(0)
+      setSkippedCount(0)
+      // 重複していない種目だけデフォルト選択
+      setSelected(
+        new Set(
+          data.exercises
+            .map((_: any, i: number) => i)
+            .filter((i: number) =>
+              !existingNames.has(data.exercises[i].name.trim().toLowerCase())
+            )
+        )
+      )
     } catch (e: any) {
       setError(e.message)
     } finally {
@@ -86,8 +106,13 @@ export default function AIExerciseGeneratorPage() {
     if (!user) return
     setSaving(true)
     try {
-      const items = Array.from(selected).map((idx) => exercises[idx])
-      for (const ex of items) {
+      const toSave = Array.from(selected).map((idx) => exercises[idx])
+      const newItems = toSave.filter(
+        (ex) => !existingNames.has(ex.name.trim().toLowerCase())
+      )
+      const skipped = toSave.length - newItems.length
+
+      for (const ex of newItems) {
         await createExerciseLibraryItem({
           coachId: user.uid,
           name: ex.name,
@@ -98,7 +123,11 @@ export default function AIExerciseGeneratorPage() {
           imageUrl: null,
         })
       }
-      router.replace('/strength/exercises')
+      setSavedCount(newItems.length)
+      setSkippedCount(skipped)
+      if (newItems.length > 0) {
+        setTimeout(() => router.replace('/strength/exercises'), 1500)
+      }
     } finally {
       setSaving(false)
     }
@@ -175,6 +204,12 @@ export default function AIExerciseGeneratorPage() {
                 エラー: {error}
               </p>
             )}
+            {savedCount > 0 && (
+              <p className="rounded-lg bg-emerald-900/40 border border-emerald-800 px-3 py-2 text-sm text-emerald-400">
+                {savedCount}件を保存しました
+                {skippedCount > 0 && `（重複${skippedCount}件はスキップ）`}
+              </p>
+            )}
           </div>
         </div>
 
@@ -223,7 +258,12 @@ export default function AIExerciseGeneratorPage() {
                         {selected.has(idx) && <Check className="h-3 w-3" />}
                       </span>
                       <div className="flex-1">
-                        <h4 className="text-sm font-semibold text-white">{ex.name}</h4>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-sm font-semibold text-white">{ex.name}</h4>
+                          {existingNames.has(ex.name.trim().toLowerCase()) && (
+                            <span className="rounded px-1.5 py-0.5 text-xs bg-slate-700 text-slate-400">登録済み</span>
+                          )}
+                        </div>
                         <p className="mt-0.5 text-xs text-slate-500">
                           {STRENGTH_CATEGORY_LABELS[ex.category] ?? ex.category}
                           {ex.targetMuscles.length > 0 && (

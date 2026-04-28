@@ -11,14 +11,18 @@ import {
   deleteExerciseLibraryItem,
 } from '@/lib/firebase/firestore'
 import { YouTubeEmbed } from '@/components/strength/YouTubeEmbed'
-import type { ExerciseLibraryItem } from '@/types'
+import type { ExerciseLibraryItem, StrengthCategory } from '@/types'
 import { STRENGTH_CATEGORY_LABELS } from '@/types'
+
+const ALL = 'all'
+type Filter = typeof ALL | StrengthCategory
 
 export default function ExerciseLibraryPage() {
   const { user, profile } = useAuth()
   const router = useRouter()
   const [items, setItems] = useState<ExerciseLibraryItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [activeFilter, setActiveFilter] = useState<Filter>(ALL)
 
   const reload = async () => {
     if (!user) return
@@ -49,10 +53,28 @@ export default function ExerciseLibraryPage() {
     reload()
   }
 
+  // カテゴリ別カウント
+  const countByCategory = (cat: StrengthCategory) =>
+    items.filter((i) => i.category === cat).length
+
+  // フィルター済みリスト
+  const filtered = activeFilter === ALL
+    ? items
+    : items.filter((i) => i.category === activeFilter)
+
+  const TABS: { id: Filter; label: string }[] = [
+    { id: ALL, label: 'すべて' },
+    ...Object.entries(STRENGTH_CATEGORY_LABELS).map(([k, v]) => ({
+      id: k as StrengthCategory,
+      label: v,
+    })),
+  ]
+
   return (
     <>
       <TopBar title="種目ライブラリ" />
       <div className="p-6 space-y-4">
+        {/* ヘッダー */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-slate-400">
             登録済み種目: <span className="font-semibold text-white">{items.length}</span> 件
@@ -86,46 +108,79 @@ export default function ExerciseLibraryPage() {
             <p className="mt-1 text-xs text-slate-600">「AIで一括追加」で素早く始められます</p>
           </div>
         ) : (
-          <div className="grid gap-3 md:grid-cols-2">
-            {items.map((ex) => (
-              <div
-                key={ex.id}
-                className="rounded-xl border border-slate-800 bg-slate-900 p-4"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1">
-                    <h3 className="text-base font-semibold text-white">{ex.name}</h3>
-                    <p className="mt-0.5 text-xs text-slate-500">
-                      {STRENGTH_CATEGORY_LABELS[ex.category] ?? ex.category}
-                      {ex.targetMuscles.length > 0 && (
-                        <span className="text-slate-400"> · {ex.targetMuscles.join('・')}</span>
-                      )}
-                    </p>
+          <>
+            {/* カテゴリフィルタータブ */}
+            <div className="flex flex-wrap gap-1.5">
+              {TABS.map((tab) => {
+                const count = tab.id === ALL
+                  ? items.length
+                  : countByCategory(tab.id as StrengthCategory)
+                if (tab.id !== ALL && count === 0) return null
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveFilter(tab.id)}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                      activeFilter === tab.id
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
+                    }`}
+                  >
+                    {tab.label}
+                    <span className={`ml-1.5 ${activeFilter === tab.id ? 'text-emerald-200' : 'text-slate-500'}`}>
+                      {count}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* 種目一覧 */}
+            {filtered.length === 0 ? (
+              <p className="text-sm text-slate-500 py-4">このカテゴリの種目はまだありません</p>
+            ) : (
+              <div className="grid gap-3 md:grid-cols-2">
+                {filtered.map((ex) => (
+                  <div
+                    key={ex.id}
+                    className="rounded-xl border border-slate-800 bg-slate-900 p-4"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-base font-semibold text-white truncate">{ex.name}</h3>
+                        <p className="mt-0.5 text-xs text-slate-500">
+                          {STRENGTH_CATEGORY_LABELS[ex.category] ?? ex.category}
+                          {ex.targetMuscles.length > 0 && (
+                            <span className="text-slate-400"> · {ex.targetMuscles.join('・')}</span>
+                          )}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => router.push(`/strength/exercises/${ex.id}/edit`)}
+                          className="rounded p-1 text-slate-500 hover:bg-slate-700 hover:text-white"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(ex.id)}
+                          className="rounded p-1 text-slate-500 hover:bg-red-900/30 hover:text-red-400"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                    {ex.instructions && (
+                      <p className="mt-2 text-xs text-slate-300 line-clamp-3 whitespace-pre-wrap">
+                        {ex.instructions}
+                      </p>
+                    )}
+                    {ex.videoUrl && <YouTubeEmbed url={ex.videoUrl} />}
                   </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => router.push(`/strength/exercises/${ex.id}/edit`)}
-                      className="rounded p-1 text-slate-500 hover:bg-slate-700 hover:text-white"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(ex.id)}
-                      className="rounded p-1 text-slate-500 hover:bg-red-900/30 hover:text-red-400"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                </div>
-                {ex.instructions && (
-                  <p className="mt-2 text-xs text-slate-300 line-clamp-3 whitespace-pre-wrap">
-                    {ex.instructions}
-                  </p>
-                )}
-                {ex.videoUrl && <YouTubeEmbed url={ex.videoUrl} />}
+                ))}
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
     </>
