@@ -94,9 +94,20 @@ export async function POST(req: NextRequest) {
     // テキストブロックから JSON を取り出してパース
     const textBlock = response.content.find((b) => b.type === 'text')
     if (!textBlock || textBlock.type !== 'text') {
-      return NextResponse.json({ error: 'No text response' }, { status: 500 })
+      return NextResponse.json({ error: 'AI応答が取得できませんでした。もう一度試してください。' }, { status: 500 })
     }
-    const parsed = ExerciseLibraryGenerationSchema.parse(JSON.parse(textBlock.text))
+    const rawText = textBlock.text.trim()
+    if (!rawText.startsWith('{') && !rawText.startsWith('[')) {
+      console.error('Unexpected non-JSON response from Anthropic:', rawText.slice(0, 200))
+      return NextResponse.json({ error: 'AI応答が無効でした。もう一度試してください。' }, { status: 500 })
+    }
+    let parsed
+    try {
+      parsed = ExerciseLibraryGenerationSchema.parse(JSON.parse(rawText))
+    } catch (parseErr: any) {
+      console.error('Parse error:', parseErr.message, 'raw:', rawText.slice(0, 300))
+      return NextResponse.json({ error: 'AI応答の解析に失敗しました。もう一度試してください。' }, { status: 500 })
+    }
 
     return NextResponse.json({
       ok: true,
