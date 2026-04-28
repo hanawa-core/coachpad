@@ -5,6 +5,17 @@ import { getAnthropicClient, MODEL_STANDARD } from '@/lib/ai/client'
 import { StrengthTemplateGenerationSchema } from '@/lib/ai/schemas'
 import { buildSystemPromptWithCoach } from '@/lib/ai/coach-profile'
 
+function extractJSON(text: string): string | null {
+  const t = text.trim()
+  const codeBlock = t.match(/```(?:json)?\s*([\s\S]*?)```/)
+  if (codeBlock) return codeBlock[1].trim()
+  const obj = t.indexOf('{')
+  const arr = t.indexOf('[')
+  if (obj === -1 && arr === -1) return null
+  const start = obj === -1 ? arr : arr === -1 ? obj : Math.min(obj, arr)
+  return t.slice(start)
+}
+
 const RequestBody = z.object({
   prompt: z.string().min(3).max(500),
 })
@@ -57,16 +68,16 @@ export async function POST(req: NextRequest) {
     if (!textBlock || textBlock.type !== 'text') {
       return NextResponse.json({ error: 'AI応答が取得できませんでした。もう一度試してください。' }, { status: 500 })
     }
-    const rawText = textBlock.text.trim()
-    if (!rawText.startsWith('{') && !rawText.startsWith('[')) {
-      console.error('Unexpected non-JSON from Anthropic:', rawText.slice(0, 200))
-      return NextResponse.json({ error: 'AI応答が無効でした。もう一度試してください。' }, { status: 500 })
+    const jsonText = extractJSON(textBlock.text)
+    if (!jsonText) {
+      console.error('No JSON found in response:', textBlock.text.slice(0, 200))
+      return NextResponse.json({ error: 'AI応答からJSONを取得できませんでした。もう一度試してください。' }, { status: 500 })
     }
     let parsed
     try {
-      parsed = StrengthTemplateGenerationSchema.parse(JSON.parse(rawText))
+      parsed = StrengthTemplateGenerationSchema.parse(JSON.parse(jsonText))
     } catch (parseErr: any) {
-      console.error('Parse error:', parseErr.message, 'raw:', rawText.slice(0, 300))
+      console.error('Parse error:', parseErr.message, 'raw:', jsonText.slice(0, 300))
       return NextResponse.json({ error: 'AI応答の解析に失敗しました。もう一度試してください。' }, { status: 500 })
     }
 

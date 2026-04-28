@@ -73,8 +73,13 @@ export default function AIExerciseGeneratorPage() {
         },
         body: JSON.stringify({ prompt, count }),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'エラーが発生しました')
+      let data: any
+      try {
+        data = await res.json()
+      } catch {
+        throw new Error('サーバーエラーが発生しました。もう一度試してください。')
+      }
+      if (!res.ok) throw new Error(data?.error || 'エラーが発生しました')
       setExercises(data.exercises)
       setSavedCount(0)
       setSkippedCount(0)

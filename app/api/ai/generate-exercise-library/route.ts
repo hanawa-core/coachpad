@@ -4,6 +4,20 @@ import { adminAuth } from '@/lib/firebase/admin'
 import { getAnthropicClient, MODEL_STANDARD } from '@/lib/ai/client'
 import { ExerciseLibraryGenerationSchema } from '@/lib/ai/schemas'
 
+/** モデルの応答テキストから JSON 部分だけを抽出する */
+function extractJSON(text: string): string | null {
+  const t = text.trim()
+  // ```json ... ``` または ``` ... ``` のコードブロックを除去
+  const codeBlock = t.match(/```(?:json)?\s*([\s\S]*?)```/)
+  if (codeBlock) return codeBlock[1].trim()
+  // { または [ で始まる部分を探す
+  const obj = t.indexOf('{')
+  const arr = t.indexOf('[')
+  if (obj === -1 && arr === -1) return null
+  const start = obj === -1 ? arr : arr === -1 ? obj : Math.min(obj, arr)
+  return t.slice(start)
+}
+
 const RequestBody = z.object({
   prompt: z.string().min(3).max(500),
   count: z.number().int().min(1).max(20).default(10),
@@ -63,16 +77,16 @@ export async function POST(req: NextRequest) {
     if (!textBlock || textBlock.type !== 'text') {
       return NextResponse.json({ error: 'AI応答が取得できませんでした。もう一度試してください。' }, { status: 500 })
     }
-    const rawText = textBlock.text.trim()
-    if (!rawText.startsWith('{') && !rawText.startsWith('[')) {
-      console.error('Unexpected non-JSON response from Anthropic:', rawText.slice(0, 200))
-      return NextResponse.json({ error: 'AI応答が無効でした。もう一度試してください。' }, { status: 500 })
+    const jsonText = extractJSON(textBlock.text)
+    if (!jsonText) {
+      console.error('No JSON found in response:', textBlock.text.slice(0, 200))
+      return NextResponse.json({ error: 'AI応答からJSONを取得できませんでした。もう一度試してください。' }, { status: 500 })
     }
     let parsed
     try {
-      parsed = ExerciseLibraryGenerationSchema.parse(JSON.parse(rawText))
+      parsed = ExerciseLibraryGenerationSchema.parse(JSON.parse(jsonText))
     } catch (parseErr: any) {
-      console.error('Parse error:', parseErr.message, 'raw:', rawText.slice(0, 300))
+      console.error('Parse error:', parseErr.message, 'raw:', jsonText.slice(0, 300))
       return NextResponse.json({ error: 'AI応答の解析に失敗しました。もう一度試してください。' }, { status: 500 })
     }
 
