@@ -17,7 +17,7 @@ export default function EditExercisePage() {
 
   const [loading, setLoading] = useState(true)
   const [name, setName] = useState('')
-  const [category, setCategory] = useState<StrengthCategory>('lower_body')
+  const [category, setCategory] = useState<StrengthCategory>('thigh')
   const [targetMuscles, setTargetMuscles] = useState('')
   const [instructions, setInstructions] = useState('')
   const [videoUrl, setVideoUrl] = useState('')
@@ -30,7 +30,7 @@ export default function EditExercisePage() {
       // Handle legacy ExerciseCategory values gracefully
       const cat = item.category as string
       const validCats = Object.keys(STRENGTH_CATEGORY_LABELS)
-      setCategory(validCats.includes(cat) ? (cat as StrengthCategory) : 'lower_body')
+      setCategory(validCats.includes(cat) ? (cat as StrengthCategory) : 'thigh')
       setTargetMuscles(item.targetMuscles.join('、'))
       setInstructions(item.instructions)
       setVideoUrl(item.videoUrl ?? '')

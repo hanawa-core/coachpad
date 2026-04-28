@@ -14,7 +14,7 @@ export default function NewExercisePage() {
   const { user } = useAuth()
 
   const [name, setName] = useState('')
-  const [category, setCategory] = useState<StrengthCategory>('lower_body')
+  const [category, setCategory] = useState<StrengthCategory>('thigh')
   const [targetMuscles, setTargetMuscles] = useState('')
   const [instructions, setInstructions] = useState('')
   const [videoUrl, setVideoUrl] = useState('')

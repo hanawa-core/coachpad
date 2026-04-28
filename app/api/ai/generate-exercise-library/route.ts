@@ -28,12 +28,12 @@ const SYSTEM_PROMPT = `あなたはトレイルランニング・耐久系競技
 
 要件:
 - ランナーの実走力向上に直結する種目を優先（下半身・体幹・走動作の安定性）
-- カテゴリは部位基準: lower_body=下半身, upper_body=上半身, core=コア, full_body=全身, mobility=モビリティ, other=その他
+- カテゴリは関節・部位基準で以下から選択: thigh=大腿部, glutes=臀部, lower_leg=下腿部, ankle=足首, hip_joint=股関節, abs=腹筋, lumbar=腰椎, thoracic=胸椎, back=背部, scapula=肩甲骨, shoulder=肩, wall_drill=ウォールドリル, agility=アジリティー, full_body=全身, other=その他
 - フォームのポイントを明確に。怪我リスクのある種目では特に注意点を含める
 - 全て日本語。種目名はカタカナで記載
 
 必ず以下のJSON形式のみで応答してください。前後に説明文や\`\`\`は不要です:
-{"exercises":[{"name":"種目名","category":"lower_body","targetMuscles":["筋肉名"],"instructions":"フォームのポイント"}]}`
+{"exercises":[{"name":"種目名","category":"thigh","targetMuscles":["筋肉名"],"instructions":"フォームのポイント"}]}`
 
 export async function POST(req: NextRequest) {
   // 認証

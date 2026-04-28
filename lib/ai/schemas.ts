@@ -7,8 +7,8 @@ import { z } from 'zod'
 export const ExerciseSchema = z.object({
   name: z.string().describe('種目名（日本語・カタカナ）'),
   category: z
-    .enum(['lower_body', 'upper_body', 'core', 'full_body', 'mobility', 'other'])
-    .describe('部位カテゴリ: lower_body=下半身, upper_body=上半身, core=コア, full_body=全身, mobility=モビリティ, other=その他'),
+    .enum(['thigh', 'glutes', 'lower_leg', 'ankle', 'hip_joint', 'abs', 'lumbar', 'thoracic', 'back', 'scapula', 'shoulder', 'wall_drill', 'agility', 'full_body', 'other'])
+    .describe('関節・部位カテゴリ'),
   targetMuscles: z
     .array(z.string())
     .describe('対象筋肉（例: 大腿四頭筋、臀筋）'),
@@ -23,8 +23,8 @@ export const ExerciseLibraryGenerationSchema = z.object({
 export const TemplateExerciseSchema = z.object({
   name: z.string().describe('種目名（日本語・カタカナ）'),
   category: z
-    .enum(['lower_body', 'upper_body', 'core', 'full_body', 'mobility', 'other'])
-    .describe('部位カテゴリ'),
+    .enum(['thigh', 'glutes', 'lower_leg', 'ankle', 'hip_joint', 'abs', 'lumbar', 'thoracic', 'back', 'scapula', 'shoulder', 'wall_drill', 'agility', 'full_body', 'other'])
+    .describe('関節・部位カテゴリ'),
   targetMuscles: z.array(z.string()).describe('対象筋肉'),
   defaultSets: z.number().int().min(1).max(10).describe('推奨セット数'),
   defaultReps: z.number().int().nullable().describe('推奨回数（時間制は null）'),
@@ -39,11 +39,11 @@ export const TemplateExerciseSchema = z.object({
 // ============================================================
 
 export const StrengthTemplateGenerationSchema = z.object({
-  name: z.string().describe('テンプレート名（例: 下半身強化A）'),
+  name: z.string().describe('テンプレート名（例: 大腿部強化A）'),
   description: z.string().describe('テンプレートの目的・概要'),
   category: z
-    .enum(['lower_body', 'upper_body', 'core', 'full_body', 'mobility', 'other'])
-    .describe('カテゴリ'),
+    .enum(['thigh', 'glutes', 'lower_leg', 'ankle', 'hip_joint', 'abs', 'lumbar', 'thoracic', 'back', 'scapula', 'shoulder', 'wall_drill', 'agility', 'full_body', 'other'])
+    .describe('関節・部位カテゴリ'),
   estimatedDurationMin: z.number().int().describe('推定実施時間（分）'),
   exercises: z.array(TemplateExerciseSchema).describe('種目リスト'),
 })

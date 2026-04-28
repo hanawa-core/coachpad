@@ -277,20 +277,48 @@ export interface Annotation {
 // ============================================================
 
 export type StrengthCategory =
+  | 'thigh'       // 大腿部
+  | 'glutes'      // 臀部
+  | 'lower_leg'   // 下腿部
+  | 'ankle'       // 足首
+  | 'hip_joint'   // 股関節
+  | 'abs'         // 腹筋
+  | 'lumbar'      // 腰椎
+  | 'thoracic'    // 胸椎
+  | 'back'        // 背部
+  | 'scapula'     // 肩甲骨
+  | 'shoulder'    // 肩
+  | 'wall_drill'  // ウォールドリル
+  | 'agility'     // アジリティー
+  | 'full_body'   // 全身
+  | 'other'       // その他
+  // 旧カテゴリ（後方互換）
   | 'lower_body'
   | 'upper_body'
   | 'core'
-  | 'full_body'
   | 'mobility'
-  | 'other'
 
 export const STRENGTH_CATEGORY_LABELS: Record<StrengthCategory, string> = {
-  lower_body: '下半身',
-  upper_body: '上半身',
-  core: 'コア',
-  full_body: '全身',
-  mobility: 'モビリティ',
-  other: 'その他',
+  thigh:      '大腿部',
+  glutes:     '臀部',
+  lower_leg:  '下腿部',
+  ankle:      '足首',
+  hip_joint:  '股関節',
+  abs:        '腹筋',
+  lumbar:     '腰椎',
+  thoracic:   '胸椎',
+  back:       '背部',
+  scapula:    '肩甲骨',
+  shoulder:   '肩',
+  wall_drill: 'ウォールドリル',
+  agility:    'アジリティー',
+  full_body:  '全身',
+  other:      'その他',
+  // 旧カテゴリ（表示名だけ維持）
+  lower_body: '下半身（旧）',
+  upper_body: '上半身（旧）',
+  core:       'コア（旧）',
+  mobility:   'モビリティ（旧）',
 }
 
 export type ExerciseCategory =
