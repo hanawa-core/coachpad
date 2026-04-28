@@ -28,7 +28,11 @@ const SYSTEM_PROMPT = `あなたはトレイルランニング・耐久系競技
 
 要件:
 - ランナーの実走力向上に直結する種目を優先（下半身・体幹・走動作の安定性）
-- カテゴリは関節・部位基準で以下から選択: thigh=大腿部, glutes=臀部, lower_leg=下腿部, ankle=足首, hip_joint=股関節, abs=腹筋, lumbar=腰椎, thoracic=胸椎, back=背部, scapula=肩甲骨, shoulder=肩, wall_drill=ウォールドリル, agility=アジリティー, full_body=全身, other=その他
+- カテゴリは関節・部位基準で以下から選択:
+  下肢: hip_joint=股関節, glutes=臀部, thigh=大腿部, knee=膝関節, lower_leg=下腿部, ankle=足首, plantar=足底・足趾
+  体幹・脊柱: abs=腹筋, lumbar=腰椎, thoracic=胸椎, cervical=頸部
+  上肢・体幹上部: chest=胸部, back=背部, scapula=肩甲骨, shoulder=肩
+  動作パターン: wall_drill=ウォールドリル, agility=アジリティー, full_body=全身, other=その他
 - フォームのポイントを明確に。怪我リスクのある種目では特に注意点を含める
 - 全て日本語。種目名はカタカナで記載
 

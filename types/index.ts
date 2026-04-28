@@ -277,17 +277,25 @@ export interface Annotation {
 // ============================================================
 
 export type StrengthCategory =
-  | 'thigh'       // 大腿部
+  // ── 下肢 ─────────────────────────────
+  | 'hip_joint'   // 股関節
   | 'glutes'      // 臀部
+  | 'thigh'       // 大腿部
+  | 'knee'        // 膝関節
   | 'lower_leg'   // 下腿部
   | 'ankle'       // 足首
-  | 'hip_joint'   // 股関節
+  | 'plantar'     // 足底・足趾
+  // ── 体幹・脊柱 ───────────────────────
   | 'abs'         // 腹筋
   | 'lumbar'      // 腰椎
   | 'thoracic'    // 胸椎
+  | 'cervical'    // 頸部
+  // ── 上肢・体幹上部 ────────────────────
+  | 'chest'       // 胸部
   | 'back'        // 背部
   | 'scapula'     // 肩甲骨
   | 'shoulder'    // 肩
+  // ── 動作パターン ──────────────────────
   | 'wall_drill'  // ウォールドリル
   | 'agility'     // アジリティー
   | 'full_body'   // 全身
@@ -299,17 +307,25 @@ export type StrengthCategory =
   | 'mobility'
 
 export const STRENGTH_CATEGORY_LABELS: Record<StrengthCategory, string> = {
-  thigh:      '大腿部',
+  // 下肢
+  hip_joint:  '股関節',
   glutes:     '臀部',
+  thigh:      '大腿部',
+  knee:       '膝関節',
   lower_leg:  '下腿部',
   ankle:      '足首',
-  hip_joint:  '股関節',
+  plantar:    '足底・足趾',
+  // 体幹・脊柱
   abs:        '腹筋',
   lumbar:     '腰椎',
   thoracic:   '胸椎',
+  cervical:   '頸部',
+  // 上肢・体幹上部
+  chest:      '胸部',
   back:       '背部',
   scapula:    '肩甲骨',
   shoulder:   '肩',
+  // 動作パターン
   wall_drill: 'ウォールドリル',
   agility:    'アジリティー',
   full_body:  '全身',

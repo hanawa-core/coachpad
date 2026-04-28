@@ -29,7 +29,11 @@ const SYSTEM_PROMPT = `あなたはトレイルランニング・耐久系競技
 - ウォーミングアップから本セットへの順序（負荷の軽い種目から重い種目へ）
 - 種目数・量は推定実施時間（30〜60分）に収まるように調整
 - 全て日本語。種目名はカタカナで記載
-- category は関節・部位基準: thigh=大腿部, glutes=臀部, lower_leg=下腿部, ankle=足首, hip_joint=股関節, abs=腹筋, lumbar=腰椎, thoracic=胸椎, back=背部, scapula=肩甲骨, shoulder=肩, wall_drill=ウォールドリル, agility=アジリティー, full_body=全身, other=その他
+- category は関節・部位基準:
+  下肢: hip_joint=股関節, glutes=臀部, thigh=大腿部, knee=膝関節, lower_leg=下腿部, ankle=足首, plantar=足底・足趾
+  体幹・脊柱: abs=腹筋, lumbar=腰椎, thoracic=胸椎, cervical=頸部
+  上肢・体幹上部: chest=胸部, back=背部, scapula=肩甲骨, shoulder=肩
+  動作パターン: wall_drill=ウォールドリル, agility=アジリティー, full_body=全身, other=その他
 
 必ず以下のJSON形式のみで応答してください。前後に説明文や\`\`\`は不要です:
 {"name":"テンプレート名","description":"概要","category":"lower_body","estimatedDurationMin":40,"exercises":[{"name":"種目名","category":"lower_body","targetMuscles":["筋肉"],"defaultSets":3,"defaultReps":10,"defaultDurationSec":null,"defaultRestSec":60,"defaultWeight":null,"instructions":"フォームのポイント"}]}`

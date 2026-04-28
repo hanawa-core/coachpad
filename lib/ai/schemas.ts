@@ -1,5 +1,17 @@
 import { z } from 'zod'
 
+// 全カテゴリの共通 enum（types/index.ts の StrengthCategory と同期）
+const CATEGORY_ENUM = [
+  // 下肢
+  'hip_joint', 'glutes', 'thigh', 'knee', 'lower_leg', 'ankle', 'plantar',
+  // 体幹・脊柱
+  'abs', 'lumbar', 'thoracic', 'cervical',
+  // 上肢・体幹上部
+  'chest', 'back', 'scapula', 'shoulder',
+  // 動作パターン
+  'wall_drill', 'agility', 'full_body', 'other',
+] as const
+
 // ============================================================
 // 種目ライブラリ生成
 // ============================================================
@@ -7,7 +19,7 @@ import { z } from 'zod'
 export const ExerciseSchema = z.object({
   name: z.string().describe('種目名（日本語・カタカナ）'),
   category: z
-    .enum(['thigh', 'glutes', 'lower_leg', 'ankle', 'hip_joint', 'abs', 'lumbar', 'thoracic', 'back', 'scapula', 'shoulder', 'wall_drill', 'agility', 'full_body', 'other'])
+    .enum(CATEGORY_ENUM)
     .describe('関節・部位カテゴリ'),
   targetMuscles: z
     .array(z.string())
@@ -23,7 +35,7 @@ export const ExerciseLibraryGenerationSchema = z.object({
 export const TemplateExerciseSchema = z.object({
   name: z.string().describe('種目名（日本語・カタカナ）'),
   category: z
-    .enum(['thigh', 'glutes', 'lower_leg', 'ankle', 'hip_joint', 'abs', 'lumbar', 'thoracic', 'back', 'scapula', 'shoulder', 'wall_drill', 'agility', 'full_body', 'other'])
+    .enum(CATEGORY_ENUM)
     .describe('関節・部位カテゴリ'),
   targetMuscles: z.array(z.string()).describe('対象筋肉'),
   defaultSets: z.number().int().min(1).max(10).describe('推奨セット数'),
@@ -42,7 +54,7 @@ export const StrengthTemplateGenerationSchema = z.object({
   name: z.string().describe('テンプレート名（例: 大腿部強化A）'),
   description: z.string().describe('テンプレートの目的・概要'),
   category: z
-    .enum(['thigh', 'glutes', 'lower_leg', 'ankle', 'hip_joint', 'abs', 'lumbar', 'thoracic', 'back', 'scapula', 'shoulder', 'wall_drill', 'agility', 'full_body', 'other'])
+    .enum(CATEGORY_ENUM)
     .describe('関節・部位カテゴリ'),
   estimatedDurationMin: z.number().int().describe('推定実施時間（分）'),
   exercises: z.array(TemplateExerciseSchema).describe('種目リスト'),
