@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Plus, Library, Sparkles, Trash2 } from 'lucide-react'
+import { Plus, Library, Sparkles, Trash2, Pencil } from 'lucide-react'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { TopBar } from '@/components/layout/TopBar'
+import { useRouter } from 'next/navigation'
 import {
   getExerciseLibrary,
   deleteExerciseLibraryItem,
@@ -15,6 +16,7 @@ import { EXERCISE_CATEGORY_LABELS } from '@/types'
 
 export default function ExerciseLibraryPage() {
   const { user, profile } = useAuth()
+  const router = useRouter()
   const [items, setItems] = useState<ExerciseLibraryItem[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -100,12 +102,20 @@ export default function ExerciseLibraryPage() {
                       )}
                     </p>
                   </div>
-                  <button
-                    onClick={() => handleDelete(ex.id)}
-                    className="rounded p-1 text-slate-500 hover:bg-red-900/30 hover:text-red-400"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => router.push(`/strength/exercises/${ex.id}/edit`)}
+                      className="rounded p-1 text-slate-500 hover:bg-slate-700 hover:text-white"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(ex.id)}
+                      className="rounded p-1 text-slate-500 hover:bg-red-900/30 hover:text-red-400"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-400">
                   <span>セット: {ex.defaultSets}</span>
