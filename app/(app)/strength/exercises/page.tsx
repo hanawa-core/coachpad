@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Plus, Library, Sparkles, Trash2, Pencil } from 'lucide-react'
+import { Plus, Library, Sparkles, Trash2, Pencil, RefreshCw } from 'lucide-react'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { TopBar } from '@/components/layout/TopBar'
 import { useRouter } from 'next/navigation'
@@ -23,6 +23,7 @@ export default function ExerciseLibraryPage() {
   const [items, setItems] = useState<ExerciseLibraryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [activeFilter, setActiveFilter] = useState<Filter>(ALL)
+  const [reclassifying, setReclassifying] = useState(false)
 
   const reload = async () => {
     if (!user) return
@@ -51,6 +52,34 @@ export default function ExerciseLibraryPage() {
     if (!confirm('この種目を削除しますか？')) return
     await deleteExerciseLibraryItem(id)
     reload()
+  }
+
+  // 旧カテゴリ件数
+  const LEGACY = ['lower_body', 'upper_body', 'core', 'mobility']
+  const legacyCount = items.filter((i) => LEGACY.includes(i.category)).length
+
+  // AI再分類
+  const handleReclassify = async () => {
+    if (!user) return
+    if (!confirm(`${legacyCount}件の種目をAIで自動分類します。よろしいですか？`)) return
+    setReclassifying(true)
+    try {
+      const token = await user.getIdToken()
+      const res = await fetch('/api/ai/reclassify-exercises', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ coachId: user.uid }),
+      })
+      const data = await res.json()
+      if (data.ok) {
+        alert(`${data.updated}件を新カテゴリに分類しました`)
+        reload()
+      } else {
+        alert('エラーが発生しました: ' + data.error)
+      }
+    } finally {
+      setReclassifying(false)
+    }
   }
 
   // カテゴリ別カウント
@@ -88,6 +117,28 @@ export default function ExerciseLibraryPage() {
             </Link>
           </div>
         </div>
+
+        {/* 旧カテゴリ再分類バナー */}
+        {!loading && legacyCount > 0 && (
+          <div className="flex items-center justify-between rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+            <div>
+              <p className="text-sm font-medium text-amber-300">
+                旧カテゴリの種目が {legacyCount} 件あります
+              </p>
+              <p className="text-xs text-amber-400/70 mt-0.5">
+                AIが種目名・対象筋肉・説明から新カテゴリに自動分類します
+              </p>
+            </div>
+            <button
+              onClick={handleReclassify}
+              disabled={reclassifying}
+              className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white hover:bg-amber-400 disabled:opacity-60 shrink-0 ml-4"
+            >
+              <RefreshCw className={`h-4 w-4 ${reclassifying ? 'animate-spin' : ''}`} />
+              {reclassifying ? '分類中...' : 'AIで再分類'}
+            </button>
+          </div>
+        )}
 
         {loading ? (
           <div className="flex h-32 items-center justify-center">
