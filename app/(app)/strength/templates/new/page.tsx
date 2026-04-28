@@ -10,6 +10,7 @@ import { TopBar } from '@/components/layout/TopBar'
 import { createStrengthTemplate } from '@/lib/firebase/firestore'
 import {
   STRENGTH_CATEGORY_LABELS,
+  STRENGTH_CATEGORY_GROUPS,
   EXERCISE_CATEGORY_LABELS,
   type StrengthCategory,
   type ExerciseCategory,
@@ -206,8 +207,12 @@ export default function NewTemplatePage() {
                   onChange={(e) => setCategory(e.target.value as StrengthCategory)}
                   className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
                 >
-                  {Object.entries(STRENGTH_CATEGORY_LABELS).map(([k, v]) => (
-                    <option key={k} value={k}>{v}</option>
+                  {STRENGTH_CATEGORY_GROUPS.map((group) => (
+                    <optgroup key={group.label} label={group.label}>
+                      {group.categories.map((cat) => (
+                        <option key={cat} value={cat}>{STRENGTH_CATEGORY_LABELS[cat]}</option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
               </div>

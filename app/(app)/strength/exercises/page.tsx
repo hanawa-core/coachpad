@@ -12,7 +12,7 @@ import {
 } from '@/lib/firebase/firestore'
 import { YouTubeEmbed } from '@/components/strength/YouTubeEmbed'
 import type { ExerciseLibraryItem, StrengthCategory } from '@/types'
-import { STRENGTH_CATEGORY_LABELS } from '@/types'
+import { STRENGTH_CATEGORY_LABELS, STRENGTH_CATEGORY_GROUPS } from '@/types'
 
 const ALL = 'all'
 type Filter = typeof ALL | StrengthCategory
@@ -62,14 +62,6 @@ export default function ExerciseLibraryPage() {
     ? items
     : items.filter((i) => i.category === activeFilter)
 
-  const TABS: { id: Filter; label: string }[] = [
-    { id: ALL, label: 'すべて' },
-    ...Object.entries(STRENGTH_CATEGORY_LABELS).map(([k, v]) => ({
-      id: k as StrengthCategory,
-      label: v,
-    })),
-  ]
-
   return (
     <>
       <TopBar title="種目ライブラリ" />
@@ -109,28 +101,56 @@ export default function ExerciseLibraryPage() {
           </div>
         ) : (
           <>
-            {/* カテゴリフィルタータブ */}
-            <div className="flex flex-wrap gap-1.5">
-              {TABS.map((tab) => {
-                const count = tab.id === ALL
-                  ? items.length
-                  : countByCategory(tab.id as StrengthCategory)
-                if (tab.id !== ALL && count === 0) return null
+            {/* カテゴリフィルタータブ（グループ表示） */}
+            <div className="space-y-2">
+              {/* すべて */}
+              <button
+                onClick={() => setActiveFilter(ALL)}
+                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                  activeFilter === ALL
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
+                }`}
+              >
+                すべて
+                <span className={`ml-1.5 ${activeFilter === ALL ? 'text-emerald-200' : 'text-slate-500'}`}>
+                  {items.length}
+                </span>
+              </button>
+
+              {/* グループ別タブ */}
+              {STRENGTH_CATEGORY_GROUPS.map((group) => {
+                const groupCats = group.categories.filter((c) => countByCategory(c) > 0)
+                // 旧カテゴリデータがある場合も表示
+                const legacyCats: StrengthCategory[] = ['lower_body', 'upper_body', 'core', 'mobility']
+                const extraLegacy = group.label === '動作パターン'
+                  ? legacyCats.filter((c) => countByCategory(c) > 0)
+                  : []
+                const allCats = [...groupCats, ...extraLegacy]
+                if (allCats.length === 0) return null
                 return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveFilter(tab.id)}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                      activeFilter === tab.id
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
-                    }`}
-                  >
-                    {tab.label}
-                    <span className={`ml-1.5 ${activeFilter === tab.id ? 'text-emerald-200' : 'text-slate-500'}`}>
-                      {count}
-                    </span>
-                  </button>
+                  <div key={group.label} className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-xs text-slate-600 font-medium w-16 shrink-0">{group.label}</span>
+                    {allCats.map((cat) => {
+                      const count = countByCategory(cat)
+                      return (
+                        <button
+                          key={cat}
+                          onClick={() => setActiveFilter(cat)}
+                          className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                            activeFilter === cat
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
+                          }`}
+                        >
+                          {STRENGTH_CATEGORY_LABELS[cat]}
+                          <span className={`ml-1.5 ${activeFilter === cat ? 'text-emerald-200' : 'text-slate-500'}`}>
+                            {count}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
                 )
               })}
             </div>

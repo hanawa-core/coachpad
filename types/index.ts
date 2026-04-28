@@ -337,6 +337,26 @@ export const STRENGTH_CATEGORY_LABELS: Record<StrengthCategory, string> = {
   mobility:   'モビリティ（旧）',
 }
 
+/** UI フィルター・フォームで使うグループ定義（旧カテゴリ除外） */
+export const STRENGTH_CATEGORY_GROUPS: { label: string; categories: StrengthCategory[] }[] = [
+  {
+    label: '下肢',
+    categories: ['hip_joint', 'glutes', 'thigh', 'knee', 'lower_leg', 'ankle', 'plantar'],
+  },
+  {
+    label: '体幹・脊柱',
+    categories: ['abs', 'lumbar', 'thoracic', 'cervical'],
+  },
+  {
+    label: '上肢・体幹上部',
+    categories: ['chest', 'back', 'scapula', 'shoulder'],
+  },
+  {
+    label: '動作パターン',
+    categories: ['wall_drill', 'agility', 'full_body', 'other'],
+  },
+]
+
 export type ExerciseCategory =
   | 'bodyweight'
   | 'dumbbell'
