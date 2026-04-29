@@ -12,6 +12,11 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 }
 
+// 環境変数が未設定の場合はブラウザコンソールに警告
+if (typeof window !== 'undefined' && !firebaseConfig.apiKey) {
+  console.error('[Firebase] NEXT_PUBLIC_FIREBASE_API_KEY が設定されていません。Vercel の環境変数を確認してください。')
+}
+
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
 
 export const auth = getAuth(app)

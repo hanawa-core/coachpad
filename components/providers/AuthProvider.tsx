@@ -24,17 +24,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // 8秒以内に onAuthStateChanged が発火しない場合は強制的に loading を解除
+    const timeout = setTimeout(() => {
+      setLoading(false)
+    }, 8000)
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      clearTimeout(timeout)
       setUser(firebaseUser)
       if (firebaseUser) {
-        const p = await getUserProfile(firebaseUser.uid)
-        setProfile(p)
+        try {
+          const p = await getUserProfile(firebaseUser.uid)
+          setProfile(p)
+        } catch {
+          setProfile(null)
+        }
       } else {
         setProfile(null)
       }
       setLoading(false)
     })
-    return unsubscribe
+    return () => {
+      clearTimeout(timeout)
+      unsubscribe()
+    }
   }, [])
 
   return (
