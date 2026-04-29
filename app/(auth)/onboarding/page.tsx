@@ -20,6 +20,13 @@ export default function OnboardingPage() {
 
     const autoSetup = async () => {
       try {
+        // 0. 既に users/{uid} がある場合は即ダッシュボードへ（上書きしない）
+        const userSnap = await getDoc(doc(db, 'users', user.uid))
+        if (userSnap.exists()) {
+          if (!cancelled) window.location.replace('/dashboard')
+          return
+        }
+
         // 1. 既に athletes/{uid} ドキュメントがあれば（招待登録済み）
         const athleteSnap = await getDoc(doc(db, 'athletes', user.uid))
         if (athleteSnap.exists()) {
