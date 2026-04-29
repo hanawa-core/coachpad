@@ -109,6 +109,19 @@ service cloud.firestore {
       allow update, delete: if isSignedIn()
                             && (resource.data.athleteId == request.auth.uid
                                 || resource.data.coachId == request.auth.uid);
+
+      // 動画書き込み（フレーム赤ペン）
+      match /annotations/{annotationId} {
+        allow read: if isSignedIn()
+                    && (get(/databases/$(database)/documents/motionAnalyses/$(id)).data.athleteId == request.auth.uid
+                        || get(/databases/$(database)/documents/motionAnalyses/$(id)).data.coachId == request.auth.uid);
+        allow create: if isSignedIn()
+                      && request.resource.data.coachId == request.auth.uid
+                      && get(/databases/$(database)/documents/motionAnalyses/$(id)).data.coachId == request.auth.uid;
+        allow update: if false;
+        allow delete: if isSignedIn()
+                      && resource.data.coachId == request.auth.uid;
+      }
     }
 
     // ---------- chats（参加者のみ）----------

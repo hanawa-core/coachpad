@@ -563,6 +563,25 @@ export interface MotionAnalysis {
   reviewedAt: Timestamp | null
 }
 
+/**
+ * 動画分析へのコーチ書き込み（フレーム赤ペン）
+ * Firestore: motionAnalyses/{motionId}/annotations/{annotationId}
+ */
+export interface MotionAnnotation {
+  id: string
+  motionId: string
+  coachId: string
+  /** 動画上で書き込んだ時間（秒） */
+  timestampSec: number
+  /** 注釈付き画像の Storage URL */
+  annotatedImageUrl: string
+  /** 描画データ（編集再現用） */
+  canvasData: CanvasData
+  /** コメント（任意） */
+  note: string
+  createdAt: Timestamp
+}
+
 // ============================================================
 // チャット
 // ============================================================

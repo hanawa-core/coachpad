@@ -29,6 +29,17 @@ service firebase.storage {
       allow delete: if isOwner(athleteId);
     }
 
+    // ---------- 動作分析の書き込み画像（コーチがアップロード） ----------
+    // motionAnalyses/{athleteId}/annotations/{filename}
+    match /motionAnalyses/{athleteId}/annotations/{fileName} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+                    && request.resource.size < 20 * 1024 * 1024
+                    && request.resource.contentType.matches('image/.*');
+      allow update: if false;
+      allow delete: if isSignedIn();
+    }
+
     // ---------- ワークアウト添付画像 ----------
     match /workouts/{athleteId}/{fileName} {
       allow read: if isSignedIn();

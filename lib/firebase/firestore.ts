@@ -740,6 +740,41 @@ export async function deleteMotionAnalysis(id: string) {
   await deleteDoc(doc(db, 'motionAnalyses', id))
 }
 
+// 動画書き込み（フレーム赤ペン）
+export async function createMotionAnnotation(
+  motionId: string,
+  data: {
+    coachId: string
+    timestampSec: number
+    annotatedImageUrl: string
+    canvasData: any
+    note: string
+  }
+): Promise<string> {
+  const ref = doc(collection(db, 'motionAnalyses', motionId, 'annotations'))
+  await setDoc(ref, {
+    motionId,
+    coachId: data.coachId,
+    timestampSec: data.timestampSec,
+    annotatedImageUrl: data.annotatedImageUrl,
+    canvasData: data.canvasData,
+    note: data.note,
+    createdAt: serverTimestamp(),
+  })
+  return ref.id
+}
+
+export async function listMotionAnnotations(motionId: string) {
+  const snap = await getDocs(collection(db, 'motionAnalyses', motionId, 'annotations'))
+  return snap.docs
+    .map((d) => ({ id: d.id, ...(d.data() as any) }))
+    .sort((a, b) => (a.timestampSec ?? 0) - (b.timestampSec ?? 0))
+}
+
+export async function deleteMotionAnnotation(motionId: string, annotationId: string) {
+  await deleteDoc(doc(db, 'motionAnalyses', motionId, 'annotations', annotationId))
+}
+
 // ============================================================
 // チャット
 // ============================================================
