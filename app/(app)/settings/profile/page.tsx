@@ -6,6 +6,8 @@ import { ArrowLeft, Save, Check, User } from 'lucide-react'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { TopBar } from '@/components/layout/TopBar'
 import { updateUserProfile } from '@/lib/firebase/firestore'
+import { TestCalculator } from '@/components/running/TestCalculator'
+import type { TestResult } from '@/components/running/TestCalculator'
 
 export default function ProfileEditPage() {
   const { user, profile } = useAuth()
@@ -28,6 +30,12 @@ export default function ProfileEditPage() {
 
   const [saving, setSaving] = useState(false)
   const [savedAt, setSavedAt] = useState<Date | null>(null)
+
+  const applyTestResult = (r: TestResult) => {
+    if (r.lthr) setThresholdHr(r.lthr.toString())
+    if (r.thresholdPace) setThresholdPace(r.thresholdPace)
+    if (r.ftp) setFtp(r.ftp.toString())
+  }
 
   useEffect(() => {
     if (!profile) return
@@ -252,6 +260,9 @@ export default function ProfileEditPage() {
                 />
               </Field>
             </div>
+
+            {/* テスト計算機 */}
+            <TestCalculator onApply={applyTestResult} />
 
             {/* 心拍ゾーン自動表示 */}
             {hrZones && (

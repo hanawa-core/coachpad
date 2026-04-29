@@ -42,7 +42,7 @@ function secToPace(sec: number): string {
 // ────────────────────────────────────────────────
 // Test calculator logic
 // ────────────────────────────────────────────────
-type TestResult = { lthr?: number; thresholdPace?: string; note?: string }
+type TestResult = { lthr?: number; thresholdPace?: string; ftp?: number; note?: string }
 
 function calc20min(avgHr: string, avgPace: string): TestResult {
   const hr = parseInt(avgHr)
@@ -326,6 +326,7 @@ export function RunningSettingsPanel({ athleteId }: { athleteId: string }) {
   const applyTestResult = (r: TestResult) => {
     if (r.lthr) setThresholdHr(String(r.lthr))
     if (r.thresholdPace) setThresholdPace(r.thresholdPace)
+    if (r.ftp) setFtp(String(r.ftp))
   }
 
   if (loading) return null

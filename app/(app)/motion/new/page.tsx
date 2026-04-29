@@ -46,8 +46,13 @@ export default function NewMotionAnalysisPage() {
   }
 
   const handleUpload = async () => {
-    if (!user || !file || !profile?.coachId) {
+    if (!user || !file) return
+    if (!profile?.coachId) {
       setError('コーチが設定されていません')
+      return
+    }
+    if (!process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET) {
+      setError('Firebase Storage が設定されていません。Vercel 環境変数 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET を確認してください。')
       return
     }
     setError('')

@@ -35,7 +35,18 @@ export function uploadVideo(
           })
         }
       },
-      (err) => reject(err),
+      (err) => {
+        // Firebase Storage エラーコードを人間が読める形に変換
+        const code = (err as any).code as string | undefined
+        let message = err.message
+        if (code === 'storage/unauthorized')   message = 'アップロード権限がありません。Firebase Storageのルールを確認してください。'
+        else if (code === 'storage/unauthenticated') message = '認証が必要です。再ログインしてください。'
+        else if (code === 'storage/quota-exceeded')  message = 'ストレージ容量が上限に達しています。'
+        else if (code === 'storage/canceled')         message = 'アップロードがキャンセルされました。'
+        else if (code === 'storage/unknown')          message = `不明なエラーが発生しました (${code})`
+        else if (code)                                message = `Storage エラー: ${code}`
+        reject(new Error(message))
+      },
       async () => {
         const url = await getDownloadURL(task.snapshot.ref)
         // 動画長さは別途クライアントで取得
