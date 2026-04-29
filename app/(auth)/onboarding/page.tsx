@@ -1,19 +1,80 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { Activity } from 'lucide-react'
 import { useAuth } from '@/components/providers/AuthProvider'
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc, setDoc, query, where, getDocs, collection, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase/config'
 
 export default function OnboardingPage() {
   const { user } = useAuth()
-  const router = useRouter()
   const [displayName, setDisplayName] = useState('')
-  const [role, setRole] = useState<'coach' | 'athlete'>('coach')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [autoChecking, setAutoChecking] = useState(true)
+
+  // 招待経由のユーザーを自動検出して即座にプロフィール作成
+  useEffect(() => {
+    if (!user) return
+    let cancelled = false
+
+    const autoSetup = async () => {
+      try {
+        // 1. 既に athletes/{uid} ドキュメントがあれば（招待登録済み）
+        const athleteSnap = await getDoc(doc(db, 'athletes', user.uid))
+        if (athleteSnap.exists()) {
+          const data = athleteSnap.data()
+          await setDoc(doc(db, 'users', user.uid), {
+            uid: user.uid,
+            email: user.email ?? '',
+            displayName: data.displayName ?? user.displayName ?? user.email?.split('@')[0] ?? 'ユーザー',
+            role: 'athlete',
+            avatarUrl: null,
+            coachId: data.coachId ?? null,
+            timezone: 'Asia/Tokyo',
+            targetRaces: [],
+            createdAt: serverTimestamp(),
+          })
+          if (!cancelled) window.location.replace('/dashboard')
+          return
+        }
+
+        // 2. メールに紐づく pending 招待があれば athlete として登録
+        if (user.email) {
+          const inviteQ = query(
+            collection(db, 'invites'),
+            where('email', '==', user.email),
+            where('status', '==', 'pending')
+          )
+          const inviteSnap = await getDocs(inviteQ)
+          if (!inviteSnap.empty) {
+            const invite = inviteSnap.docs[0].data()
+            await setDoc(doc(db, 'users', user.uid), {
+              uid: user.uid,
+              email: user.email,
+              displayName: user.displayName ?? user.email.split('@')[0],
+              role: 'athlete',
+              avatarUrl: null,
+              coachId: invite.coachId,
+              timezone: 'Asia/Tokyo',
+              targetRaces: [],
+              createdAt: serverTimestamp(),
+            })
+            if (!cancelled) window.location.replace('/dashboard')
+            return
+          }
+        }
+
+        // 招待が見つからない → コーチとして手動登録フォーム表示
+        if (!cancelled) setAutoChecking(false)
+      } catch (e) {
+        if (!cancelled) setAutoChecking(false)
+      }
+    }
+
+    autoSetup()
+    return () => { cancelled = true }
+  }, [user])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -25,19 +86,27 @@ export default function OnboardingPage() {
         uid: user.uid,
         email: user.email ?? '',
         displayName: displayName.trim(),
-        role,
+        role: 'coach',
         avatarUrl: null,
         coachId: null,
         timezone: 'Asia/Tokyo',
         targetRaces: [],
         createdAt: serverTimestamp(),
       })
-      // プロフィール作成後はページをリロードしてAuthProviderに再取得させる
       window.location.replace('/dashboard')
     } catch (e: any) {
       setError(e.message ?? 'エラーが発生しました')
       setSaving(false)
     }
+  }
+
+  // 招待検出中のローディング画面
+  if (autoChecking) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
+      </div>
+    )
   }
 
   return (
@@ -48,13 +117,13 @@ export default function OnboardingPage() {
             <Activity className="h-8 w-8 text-emerald-400" />
             <span className="text-2xl font-bold text-white">CoachPad</span>
           </div>
-          <p className="text-sm text-slate-400">プロフィール設定</p>
+          <p className="text-sm text-slate-400">コーチ登録</p>
         </div>
 
         <div className="rounded-xl bg-slate-900 border border-slate-800 p-6">
-          <h1 className="mb-2 text-xl font-bold text-white">はじめに設定してください</h1>
+          <h1 className="mb-2 text-xl font-bold text-white">コーチアカウントの作成</h1>
           <p className="mb-6 text-sm text-slate-400">
-            アカウントのプロフィールを作成します
+            お名前を入力して開始してください
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -72,36 +141,6 @@ export default function OnboardingPage() {
               />
             </div>
 
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-300">
-                役割
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setRole('coach')}
-                  className={`rounded-lg border px-4 py-3 text-sm font-medium transition-colors ${
-                    role === 'coach'
-                      ? 'border-emerald-500 bg-emerald-500/20 text-emerald-300'
-                      : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
-                  }`}
-                >
-                  コーチ
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole('athlete')}
-                  className={`rounded-lg border px-4 py-3 text-sm font-medium transition-colors ${
-                    role === 'athlete'
-                      ? 'border-blue-500 bg-blue-500/20 text-blue-300'
-                      : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
-                  }`}
-                >
-                  選手
-                </button>
-              </div>
-            </div>
-
             {error && (
               <p className="rounded-lg bg-red-900/40 border border-red-800 px-3 py-2 text-sm text-red-400">
                 {error}
@@ -116,6 +155,10 @@ export default function OnboardingPage() {
               {saving ? '設定中...' : 'はじめる'}
             </button>
           </form>
+
+          <p className="mt-4 text-center text-xs text-slate-500">
+            選手の方は、コーチからの招待リンクを開いてください
+          </p>
         </div>
       </div>
     </div>
