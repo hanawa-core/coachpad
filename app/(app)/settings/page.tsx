@@ -124,6 +124,17 @@ export default function SettingsPage() {
             <StravaCard />
           </Suspense>
         )}
+
+        {/* 法務リンク */}
+        <div className="pt-6 flex items-center justify-center gap-3 text-xs text-slate-500">
+          <Link href="/terms" className="hover:text-slate-300 hover:underline">
+            利用規約
+          </Link>
+          <span>·</span>
+          <Link href="/privacy" className="hover:text-slate-300 hover:underline">
+            プライバシーポリシー
+          </Link>
+        </div>
       </div>
     </>
   )

@@ -90,6 +90,16 @@ export default function LoginPage() {
         <p className="mt-4 text-center text-sm text-slate-500">
           アカウントをお持ちでない方は、コーチから招待リンクを受け取ってください
         </p>
+
+        <div className="mt-6 flex items-center justify-center gap-3 text-xs text-slate-500">
+          <Link href="/terms" className="hover:text-slate-300 hover:underline">
+            利用規約
+          </Link>
+          <span>·</span>
+          <Link href="/privacy" className="hover:text-slate-300 hover:underline">
+            プライバシーポリシー
+          </Link>
+        </div>
       </div>
     </div>
   )

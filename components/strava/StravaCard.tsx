@@ -166,12 +166,22 @@ export function StravaCard() {
       ) : (
         <button
           onClick={handleConnect}
-          className="mt-4 flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-600"
+          className="mt-4 flex items-center gap-2 rounded-lg bg-[#FC4C02] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#E04400]"
         >
           <LinkIcon className="h-4 w-4" />
           Stravaに接続
         </button>
       )}
+
+      {/* Strava ブランドガイドライン準拠の表示 */}
+      <div className="mt-4 flex items-center justify-end gap-1.5 border-t border-slate-800 pt-3">
+        <span className="text-[10px] uppercase tracking-wider text-slate-500">
+          Powered by
+        </span>
+        <span className="text-xs font-bold uppercase tracking-wider text-[#FC4C02]">
+          Strava
+        </span>
+      </div>
     </div>
   )
 }
