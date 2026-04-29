@@ -1,6 +1,8 @@
 import { AuthGuard } from '@/components/layout/AuthGuard'
 import { Sidebar } from '@/components/layout/Sidebar'
 
+export const dynamic = 'force-dynamic'
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>

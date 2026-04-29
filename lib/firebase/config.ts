@@ -19,7 +19,22 @@ if (typeof window !== 'undefined' && !firebaseConfig.apiKey) {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
 
-export const auth = getAuth(app)
-export const db = getFirestore(app)
-export const storage = getStorage(app)
+// SSR（ビルド時）に apiKey なしで getAuth 等を呼ぶとクラッシュするため try-catch でガード
+// ブラウザ実行時は必ず Vercel 環境変数が有効なので問題なし
+// eslint-disable-next-line prefer-const
+let auth!: ReturnType<typeof getAuth>
+// eslint-disable-next-line prefer-const
+let db!: ReturnType<typeof getFirestore>
+// eslint-disable-next-line prefer-const
+let storage!: ReturnType<typeof getStorage>
+
+try {
+  auth = getAuth(app)
+  db = getFirestore(app)
+  storage = getStorage(app)
+} catch {
+  // SSR build without env vars — services initialized on client side
+}
+
+export { auth, db, storage }
 export default app
