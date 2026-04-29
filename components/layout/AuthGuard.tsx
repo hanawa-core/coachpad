@@ -1,18 +1,25 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/components/providers/AuthProvider'
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth()
+  const { user, profile, loading } = useAuth()
   const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (loading) return
+    if (!user) {
       router.replace('/login')
+      return
     }
-  }, [user, loading, router])
+    // 認証済みだがプロフィール未設定 → オンボーディングへ
+    if (!profile && pathname !== '/onboarding') {
+      router.replace('/onboarding')
+    }
+  }, [user, profile, loading, router, pathname])
 
   if (loading) {
     return (
@@ -23,6 +30,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) return null
+  if (!profile) return null
 
   return <>{children}</>
 }
