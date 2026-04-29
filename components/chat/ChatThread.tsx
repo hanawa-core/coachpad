@@ -127,7 +127,7 @@ export function ChatThread({ coachId, athleteId, otherName, selfName, selfRole }
   }
 
   return (
-    <div className="flex h-[calc(100vh-7rem)] flex-col rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
+    <div className="flex h-[calc(100dvh-9rem)] sm:h-[calc(100vh-7rem)] flex-col rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
       {/* ヘッダー */}
       <div className="flex items-center gap-3 border-b border-slate-800 px-5 py-3">
         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white">

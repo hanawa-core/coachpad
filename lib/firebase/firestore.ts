@@ -67,6 +67,12 @@ export function subscribeAthletes(
 }
 
 export async function getAthleteCache(athleteId: string): Promise<AthleteCache | null> {
+  // doc ID == userId なので直接取得（クエリだとセキュリティルールで拒否される場合がある）
+  const direct = await getDoc(doc(db, 'athletes', athleteId))
+  if (direct.exists()) {
+    return { ...(direct.data() as AthleteCache), id: direct.id }
+  }
+  // 旧データ（自動IDで作成）にフォールバック
   const q = query(collection(db, 'athletes'), where('userId', '==', athleteId))
   const snap = await getDocs(q)
   if (snap.empty) return null
@@ -84,7 +90,14 @@ export async function setAthletePlan(
   // users ドキュメントを更新
   await updateDoc(doc(db, 'users', athleteId), { plan })
 
-  // athletes キャッシュも更新
+  // athletes キャッシュも更新（doc ID == userId）
+  const directRef = doc(db, 'athletes', athleteId)
+  const directSnap = await getDoc(directRef)
+  if (directSnap.exists()) {
+    await updateDoc(directRef, { plan })
+    return
+  }
+  // 旧データへのフォールバック
   const q = query(collection(db, 'athletes'), where('userId', '==', athleteId))
   const snap = await getDocs(q)
   if (!snap.empty) {
