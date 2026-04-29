@@ -156,6 +156,12 @@ service cloud.firestore {
       allow read, write: if isOwner(coachId);
     }
 
+    // ---------- aiUsage（レート制限カウンタ：管理SDK経由のみ書込）----------
+    match /aiUsage/{uid} {
+      allow read: if isOwner(uid);
+      allow write: if false;  // サーバー側 admin SDK のみ書き込み可
+    }
+
     // ---------- デフォルト拒否 ----------
     match /{document=**} {
       allow read, write: if false;

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import { FieldValue } from 'firebase-admin/firestore'
 import { getAnthropicClient } from '@/lib/ai/client'
+import { checkAndIncrementRateLimit, RATE_LIMIT_ERROR_MESSAGE } from '@/lib/ai/rate-limit'
 
 /**
  * POST /api/ai/upload-document
@@ -22,6 +23,12 @@ export async function POST(req: NextRequest) {
     userId = decoded.uid
   } catch {
     return NextResponse.json({ error: 'invalid token' }, { status: 401 })
+  }
+
+  // ドキュメントアップロードは Anthropic Files API を消費するので weight=3
+  const rl = await checkAndIncrementRateLimit(userId, 3)
+  if (!rl.ok) {
+    return NextResponse.json({ error: RATE_LIMIT_ERROR_MESSAGE }, { status: 429 })
   }
 
   // ファイル取得

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import { getAnthropicClient, MODEL_STANDARD } from '@/lib/ai/client'
 import { buildSystemPromptWithCoach } from '@/lib/ai/coach-profile'
+import { checkAndIncrementRateLimit, RATE_LIMIT_ERROR_MESSAGE } from '@/lib/ai/rate-limit'
 
 const RequestBody = z.object({
   coachId: z.string(),
@@ -45,6 +46,12 @@ export async function POST(req: NextRequest) {
   // コーチ本人のみ実行可能
   if (requesterId !== body.coachId) {
     return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+  }
+
+  // レート制限（チーム分析は重い処理なので weight=2）
+  const rl = await checkAndIncrementRateLimit(requesterId, 2)
+  if (!rl.ok) {
+    return NextResponse.json({ error: RATE_LIMIT_ERROR_MESSAGE }, { status: 429 })
   }
 
   // 選手一覧取得

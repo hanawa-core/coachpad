@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { adminAuth } from '@/lib/firebase/admin'
 import { getAnthropicClient, MODEL_STANDARD } from '@/lib/ai/client'
 import { ExerciseLibraryGenerationSchema } from '@/lib/ai/schemas'
+import { checkAndIncrementRateLimit, RATE_LIMIT_ERROR_MESSAGE } from '@/lib/ai/rate-limit'
 
 /** モデルの応答テキストから JSON 部分だけを抽出する */
 function extractJSON(text: string): string | null {
@@ -59,6 +60,11 @@ export async function POST(req: NextRequest) {
     body = RequestBody.parse(await req.json())
   } catch (e: any) {
     return NextResponse.json({ error: 'invalid request', details: e.message }, { status: 400 })
+  }
+
+  const rl = await checkAndIncrementRateLimit(userId, 1)
+  if (!rl.ok) {
+    return NextResponse.json({ error: RATE_LIMIT_ERROR_MESSAGE }, { status: 429 })
   }
 
   // 種目ライブラリ生成は「分身AI」を使わない（一般的な種目を効率的に提案）

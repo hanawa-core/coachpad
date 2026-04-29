@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import { getAnthropicClient, MODEL_STANDARD } from '@/lib/ai/client'
+import { checkAndIncrementRateLimit, RATE_LIMIT_ERROR_MESSAGE } from '@/lib/ai/rate-limit'
 
 const RequestBody = z.object({
   coachId: z.string(),
@@ -55,6 +56,12 @@ export async function POST(req: NextRequest) {
   }
   if (requesterId !== body.coachId) {
     return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+  }
+
+  // 一括処理は重い（複数バッチでAPI呼び出し）ので weight=3
+  const rl = await checkAndIncrementRateLimit(requesterId, 3)
+  if (!rl.ok) {
+    return NextResponse.json({ error: RATE_LIMIT_ERROR_MESSAGE }, { status: 429 })
   }
 
   // 旧カテゴリの種目を取得

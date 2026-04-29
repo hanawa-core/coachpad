@@ -7,6 +7,7 @@ import {
   buildSystemPromptWithCoach,
   fetchCoachDocumentIds,
 } from '@/lib/ai/coach-profile'
+import { checkAndIncrementRateLimit, RATE_LIMIT_ERROR_MESSAGE } from '@/lib/ai/rate-limit'
 
 const RequestBody = z.object({
   athleteName: z.string(),
@@ -66,6 +67,12 @@ export async function POST(req: NextRequest) {
     body = RequestBody.parse(await req.json())
   } catch (e: any) {
     return NextResponse.json({ error: 'invalid request', details: e.message }, { status: 400 })
+  }
+
+  // ランニングプラン生成は重い処理（複数週間分）なので weight=2
+  const rl = await checkAndIncrementRateLimit(userId, 2)
+  if (!rl.ok) {
+    return NextResponse.json({ error: RATE_LIMIT_ERROR_MESSAGE }, { status: 429 })
   }
 
   // 選手のターゲットレース取得

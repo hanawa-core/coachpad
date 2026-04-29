@@ -4,6 +4,7 @@ import { adminAuth } from '@/lib/firebase/admin'
 import { getAnthropicClient, MODEL_STANDARD } from '@/lib/ai/client'
 import { StrengthTemplateGenerationSchema } from '@/lib/ai/schemas'
 import { buildSystemPromptWithCoach } from '@/lib/ai/coach-profile'
+import { checkAndIncrementRateLimit, RATE_LIMIT_ERROR_MESSAGE } from '@/lib/ai/rate-limit'
 
 function extractJSON(text: string): string | null {
   const t = text.trim()
@@ -56,6 +57,11 @@ export async function POST(req: NextRequest) {
     body = RequestBody.parse(await req.json())
   } catch (e: any) {
     return NextResponse.json({ error: 'invalid request' }, { status: 400 })
+  }
+
+  const rl = await checkAndIncrementRateLimit(userId, 1)
+  if (!rl.ok) {
+    return NextResponse.json({ error: RATE_LIMIT_ERROR_MESSAGE }, { status: 429 })
   }
 
   try {
