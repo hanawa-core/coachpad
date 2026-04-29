@@ -885,7 +885,8 @@ export async function createInvite(coachId: string, email?: string): Promise<str
   const expiresAt = new Date()
   expiresAt.setDate(expiresAt.getDate() + 7)
 
-  const ref = doc(collection(db, 'invites'))
+  // token を doc ID に使うことで、招待リンク経由の単一 doc 取得をセキュリティルールで許可可能に
+  const ref = doc(db, 'invites', token)
   await setDoc(ref, {
     coachId,
     email: email ?? null,
@@ -899,6 +900,11 @@ export async function createInvite(coachId: string, email?: string): Promise<str
 }
 
 export async function getInviteByToken(token: string): Promise<Invite | null> {
+  // 旧データ（自動IDで作成され、token が field のみ）にもフォールバック
+  const direct = await getDoc(doc(db, 'invites', token))
+  if (direct.exists()) {
+    return { ...(direct.data() as Invite), id: direct.id }
+  }
   const q = query(collection(db, 'invites'), where('token', '==', token))
   const snap = await getDocs(q)
   if (snap.empty) return null

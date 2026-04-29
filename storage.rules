@@ -1,0 +1,76 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ---------- ヘルパー ----------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+    // ファイルサイズ制限 (200MB)
+    function isUnderSizeLimit() {
+      return request.resource.size < 200 * 1024 * 1024;
+    }
+    function isVideoOrImage() {
+      return request.resource.contentType.matches('video/.*')
+          || request.resource.contentType.matches('image/.*');
+    }
+
+    // ---------- 動作分析動画 ----------
+    // motionAnalyses/{athleteId}/{filename}
+    match /motionAnalyses/{athleteId}/{fileName} {
+      allow read: if isSignedIn();          // 当該選手・コーチが見る（仕組み上署名URLが流通）
+      allow create: if isOwner(athleteId)
+                    && isUnderSizeLimit()
+                    && isVideoOrImage();
+      allow update: if false;
+      allow delete: if isOwner(athleteId);
+    }
+
+    // ---------- ワークアウト添付画像 ----------
+    match /workouts/{athleteId}/{fileName} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(athleteId)
+                    && isUnderSizeLimit()
+                    && isVideoOrImage();
+      allow update: if false;
+      allow delete: if isOwner(athleteId);
+    }
+
+    // ---------- アノテーション画像 ----------
+    match /annotations/{userId}/{fileName} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId)
+                    && isUnderSizeLimit()
+                    && isVideoOrImage();
+      allow update: if false;
+      allow delete: if isOwner(userId);
+    }
+
+    // ---------- チャット画像 ----------
+    match /chatImages/{userId}/{fileName} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId)
+                    && isUnderSizeLimit()
+                    && isVideoOrImage();
+      allow update: if false;
+      allow delete: if isOwner(userId);
+    }
+
+    // ---------- アバター ----------
+    match /avatars/{userId}/{fileName} {
+      allow read: if true;  // 全員閲覧可（プロフィール画像）
+      allow create, update: if isOwner(userId)
+                            && request.resource.size < 5 * 1024 * 1024
+                            && request.resource.contentType.matches('image/.*');
+      allow delete: if isOwner(userId);
+    }
+
+    // ---------- デフォルト拒否 ----------
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

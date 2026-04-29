@@ -1,0 +1,164 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- ヘルパー ----------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+    function userDoc(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data;
+    }
+    function isCoachOf(athleteUid) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(athleteUid))
+        && userDoc(athleteUid).coachId == request.auth.uid;
+    }
+
+    // ---------- users ----------
+    // 自分のプロフィール: 作成・更新可。全認証ユーザーが閲覧可（コーチ↔選手の名前表示）
+    match /users/{uid} {
+      allow read: if isSignedIn();
+      allow create, update: if isOwner(uid);
+      allow delete: if false;
+
+      // Strava 連携（本人のみ）
+      match /integrations/{docId} {
+        allow read, write: if isOwner(uid);
+      }
+      // コーチAIプロフィール（本人のみ）
+      match /aiProfile/{docId} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+
+    // ---------- athletes（コーチダッシュボード用キャッシュ）----------
+    match /athletes/{athleteId} {
+      allow read: if isOwner(athleteId)
+                  || (isSignedIn() && resource.data.coachId == request.auth.uid);
+      allow create: if isSignedIn()
+                    && (request.resource.data.coachId == request.auth.uid
+                        || request.resource.data.userId == request.auth.uid);
+      allow update: if isSignedIn()
+                    && (resource.data.coachId == request.auth.uid
+                        || resource.data.userId == request.auth.uid);
+      allow delete: if isSignedIn() && resource.data.coachId == request.auth.uid;
+    }
+
+    // ---------- workouts ----------
+    match /workouts/{id} {
+      allow read: if isSignedIn()
+                  && (resource.data.athleteId == request.auth.uid
+                      || resource.data.coachId == request.auth.uid);
+      allow create: if isSignedIn()
+                    && (request.resource.data.athleteId == request.auth.uid
+                        || request.resource.data.coachId == request.auth.uid);
+      allow update, delete: if isSignedIn()
+                            && (resource.data.athleteId == request.auth.uid
+                                || resource.data.coachId == request.auth.uid);
+    }
+
+    // ---------- strengthAssignments ----------
+    match /strengthAssignments/{id} {
+      allow read: if isSignedIn()
+                  && (resource.data.athleteId == request.auth.uid
+                      || resource.data.coachId == request.auth.uid);
+      allow create: if isSignedIn()
+                    && (request.resource.data.athleteId == request.auth.uid
+                        || request.resource.data.coachId == request.auth.uid);
+      allow update, delete: if isSignedIn()
+                            && (resource.data.athleteId == request.auth.uid
+                                || resource.data.coachId == request.auth.uid);
+    }
+
+    // ---------- strengthTemplates（コーチ管理）----------
+    match /strengthTemplates/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.coachId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.coachId == request.auth.uid;
+    }
+
+    // ---------- exerciseLibrary（コーチ管理）----------
+    match /exerciseLibrary/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.coachId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.coachId == request.auth.uid;
+    }
+
+    // ---------- wellnessEntries ----------
+    match /wellnessEntries/{id} {
+      allow read: if isSignedIn()
+                  && (resource.data.athleteId == request.auth.uid
+                      || isCoachOf(resource.data.athleteId));
+      allow create: if isSignedIn()
+                    && request.resource.data.athleteId == request.auth.uid;
+      allow update, delete: if isSignedIn()
+                            && resource.data.athleteId == request.auth.uid;
+    }
+
+    // ---------- motionAnalyses ----------
+    match /motionAnalyses/{id} {
+      allow read: if isSignedIn()
+                  && (resource.data.athleteId == request.auth.uid
+                      || resource.data.coachId == request.auth.uid);
+      allow create: if isSignedIn()
+                    && request.resource.data.athleteId == request.auth.uid;
+      allow update, delete: if isSignedIn()
+                            && (resource.data.athleteId == request.auth.uid
+                                || resource.data.coachId == request.auth.uid);
+    }
+
+    // ---------- chats（参加者のみ）----------
+    match /chats/{threadId} {
+      allow read: if isSignedIn()
+                  && request.auth.uid in resource.data.participants;
+      allow create: if isSignedIn()
+                    && request.auth.uid in request.resource.data.participants;
+      allow update: if isSignedIn()
+                    && request.auth.uid in resource.data.participants;
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        allow read: if isSignedIn()
+                    && request.auth.uid in get(/databases/$(database)/documents/chats/$(threadId)).data.participants;
+        allow create: if isSignedIn()
+                      && request.resource.data.senderId == request.auth.uid
+                      && request.auth.uid in get(/databases/$(database)/documents/chats/$(threadId)).data.participants;
+        allow update, delete: if false;
+      }
+    }
+
+    // ---------- invites（doc ID = token）----------
+    // 招待リンク経由は token を知っていれば未認証でも単一doc取得可能（list は不可）
+    match /invites/{token} {
+      allow get: if true;
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.coachId == request.auth.uid;
+      // 受け入れ時：本人が自身を acceptedByUserId にセットする更新を許可
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn() && resource.data.coachId == request.auth.uid;
+    }
+
+    // ---------- notifications ----------
+    match /notifications/{id} {
+      allow read, update: if isSignedIn()
+                          && resource.data.recipientId == request.auth.uid;
+      allow create: if isSignedIn();
+      allow delete: if isSignedIn()
+                    && resource.data.recipientId == request.auth.uid;
+    }
+
+    // ---------- aiTeamAnalysis（コーチ専用キャッシュ）----------
+    match /aiTeamAnalysis/{coachId} {
+      allow read, write: if isOwner(coachId);
+    }
+
+    // ---------- デフォルト拒否 ----------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
