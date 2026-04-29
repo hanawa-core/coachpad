@@ -22,34 +22,58 @@ export function uploadVideo(
     const safeName = file.name.replace(/[^\w.-]/g, '_')
     const path = `motionAnalyses/${athleteId}/${id}_${safeName}`
     const storageRef = ref(storage, path)
-    const task = uploadBytesResumable(storageRef, file, { contentType: file.type })
+    const task = uploadBytesResumable(storageRef, file, { contentType: file.type || 'video/mp4' })
+
+    // 30秒経過してもバイトが転送されない場合はタイムアウト
+    let lastBytes = 0
+    const timeout = setTimeout(() => {
+      task.cancel()
+      reject(new Error(
+        'アップロードがタイムアウトしました。\n' +
+        '考えられる原因:\n' +
+        '1. Firebase Storage のセキュリティルールがアップロードを拒否している\n' +
+        '2. ネットワーク接続が不安定\n' +
+        '\nFirebase Console > Storage > Rules を確認してください:\n' +
+        'allow read, write: if request.auth != null;'
+      ))
+    }, 30000)
 
     task.on(
       'state_changed',
       (snap) => {
+        clearTimeout(timeout) // 進捗があればタイムアウトリセットしない（一度クリア）
+        lastBytes = snap.bytesTransferred
         if (onProgress) {
           onProgress({
             bytesTransferred: snap.bytesTransferred,
             totalBytes: snap.totalBytes,
-            percent: Math.round((snap.bytesTransferred / snap.totalBytes) * 100),
+            percent: snap.totalBytes > 0
+              ? Math.round((snap.bytesTransferred / snap.totalBytes) * 100)
+              : 0,
           })
         }
       },
       (err) => {
-        // Firebase Storage エラーコードを人間が読める形に変換
+        clearTimeout(timeout)
         const code = (err as any).code as string | undefined
         let message = err.message
-        if (code === 'storage/unauthorized')   message = 'アップロード権限がありません。Firebase Storageのルールを確認してください。'
-        else if (code === 'storage/unauthenticated') message = '認証が必要です。再ログインしてください。'
-        else if (code === 'storage/quota-exceeded')  message = 'ストレージ容量が上限に達しています。'
-        else if (code === 'storage/canceled')         message = 'アップロードがキャンセルされました。'
-        else if (code === 'storage/unknown')          message = `不明なエラーが発生しました (${code})`
-        else if (code)                                message = `Storage エラー: ${code}`
+        if (code === 'storage/unauthorized')
+          message = '権限エラー: Firebase Storage のセキュリティルールでアップロードが拒否されています。\nFirebase Console > Storage > Rules を確認してください。'
+        else if (code === 'storage/unauthenticated')
+          message = '認証エラー: 再ログインしてから再試行してください。'
+        else if (code === 'storage/quota-exceeded')
+          message = 'ストレージ容量が上限に達しています。'
+        else if (code === 'storage/canceled')
+          message = 'アップロードがキャンセルされました。'
+        else if (code === 'storage/retry-limit-exceeded')
+          message = 'ネットワークエラー: 接続を確認して再試行してください。'
+        else if (code)
+          message = `Storage エラー (${code}): ${err.message}`
         reject(new Error(message))
       },
       async () => {
+        clearTimeout(timeout)
         const url = await getDownloadURL(task.snapshot.ref)
-        // 動画長さは別途クライアントで取得
         resolve({ url, path, durationSec: null })
       }
     )

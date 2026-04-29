@@ -156,9 +156,9 @@ export default function NewMotionAnalysisPage() {
             )}
 
             {error && (
-              <p className="rounded-lg bg-red-900/40 border border-red-800 px-3 py-2 text-sm text-red-400">
+              <div className="rounded-lg bg-red-900/40 border border-red-800 px-3 py-2 text-sm text-red-400 whitespace-pre-line">
                 {error}
-              </p>
+              </div>
             )}
 
             <button
