@@ -9,7 +9,7 @@ import { adminDb } from '@/lib/firebase/admin'
  */
 
 // 1日あたりの最大重みポイント（1呼び出し = 1pt が基本）
-const DAILY_LIMIT = 30
+const DAILY_LIMIT = 200
 
 export interface RateLimitResult {
   ok: boolean
