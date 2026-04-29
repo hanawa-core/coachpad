@@ -34,7 +34,7 @@ export default function ChatPage() {
       return (
         <>
           <TopBar title="チャット" />
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <p className="text-sm text-slate-400">コーチが設定されていません</p>
           </div>
         </>
@@ -43,7 +43,7 @@ export default function ChatPage() {
     return (
       <>
         <TopBar title="チャット" />
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <ChatThread
             coachId={profile.coachId}
             athleteId={user.uid}
@@ -60,7 +60,7 @@ export default function ChatPage() {
   return (
     <>
       <TopBar title="チャット" />
-      <div className="p-6 max-w-3xl space-y-3">
+      <div className="p-4 sm:p-6 max-w-3xl space-y-3">
         {loading ? (
           <div className="flex h-32 items-center justify-center">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />

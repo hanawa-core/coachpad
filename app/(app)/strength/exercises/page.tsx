@@ -41,7 +41,7 @@ export default function ExerciseLibraryPage() {
     return (
       <>
         <TopBar title="種目ライブラリ" />
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <p className="text-sm text-slate-400">この機能はコーチのみ利用できます</p>
         </div>
       </>
@@ -94,7 +94,7 @@ export default function ExerciseLibraryPage() {
   return (
     <>
       <TopBar title="種目ライブラリ" />
-      <div className="p-6 space-y-4">
+      <div className="p-4 sm:p-6 space-y-4">
         {/* ヘッダー */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-slate-400">

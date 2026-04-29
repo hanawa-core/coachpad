@@ -25,7 +25,7 @@ export default function CalendarPage() {
     return (
       <>
         <TopBar title="カレンダー" />
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <p className="text-sm text-slate-400 mb-4">
             選手を選んでカレンダーを表示してください
           </p>
@@ -43,7 +43,7 @@ export default function CalendarPage() {
   return (
     <>
       <TopBar title="カレンダー" />
-      <div className="p-6 space-y-4">
+      <div className="p-4 sm:p-6 space-y-4">
         <div className="flex justify-end">
           <Link
             href="/workouts/new"

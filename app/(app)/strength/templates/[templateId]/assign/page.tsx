@@ -72,7 +72,7 @@ export default function AssignTemplatePage() {
   return (
     <>
       <TopBar title="割り当て" />
-      <div className="p-6 max-w-2xl">
+      <div className="p-4 sm:p-6 max-w-2xl">
         <Link
           href={`/strength/templates/${id}`}
           className="inline-flex items-center gap-1 mb-4 text-sm text-slate-400 hover:text-white"

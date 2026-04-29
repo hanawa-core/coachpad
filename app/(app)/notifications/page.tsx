@@ -32,7 +32,7 @@ export default function NotificationsPage() {
   return (
     <>
       <TopBar title="通知" />
-      <div className="p-6 max-w-2xl">
+      <div className="p-4 sm:p-6 max-w-2xl">
         <div className="rounded-xl border border-slate-800 bg-slate-900">
           {notifications.length === 0 ? (
             <div className="px-6 py-12 text-center">

@@ -13,7 +13,7 @@ export default function SettingsPage() {
   return (
     <>
       <TopBar title="設定" />
-      <div className="p-6 space-y-4 max-w-3xl">
+      <div className="p-4 sm:p-6 space-y-4 max-w-3xl">
         {/* プロフィール */}
         <Link
           href="/settings/profile"

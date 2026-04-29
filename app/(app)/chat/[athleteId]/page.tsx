@@ -24,7 +24,7 @@ export default function ChatWithAthletePage() {
     return (
       <>
         <TopBar title="チャット" />
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <p className="text-sm text-slate-400">権限がありません</p>
         </div>
       </>
@@ -45,7 +45,7 @@ export default function ChatWithAthletePage() {
   return (
     <>
       <TopBar title={`${athlete.displayName} とのチャット`} />
-      <div className="p-6 space-y-3">
+      <div className="p-4 sm:p-6 space-y-3">
         <Link
           href="/chat"
           className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white"

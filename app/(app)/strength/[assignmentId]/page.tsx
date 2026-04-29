@@ -37,7 +37,7 @@ export default function AssignmentDetailPage() {
   return (
     <>
       <TopBar title="筋力トレーニング" />
-      <div className="p-6 max-w-3xl space-y-4">
+      <div className="p-4 sm:p-6 max-w-3xl space-y-4">
         <Link href="/calendar" className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white">
           <ArrowLeft className="h-4 w-4" />
           カレンダーに戻る

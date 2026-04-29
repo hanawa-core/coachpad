@@ -50,7 +50,7 @@ export default function AIExerciseGeneratorPage() {
     return (
       <>
         <TopBar title="AI 種目生成" />
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <p className="text-sm text-slate-400">この機能はコーチのみ利用できます</p>
         </div>
       </>
@@ -141,7 +141,7 @@ export default function AIExerciseGeneratorPage() {
   return (
     <>
       <TopBar title="AI 種目生成" />
-      <div className="p-6 max-w-3xl space-y-4">
+      <div className="p-4 sm:p-6 max-w-3xl space-y-4">
         <Link
           href="/strength/exercises"
           className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white"

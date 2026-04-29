@@ -144,7 +144,7 @@ export default function NewTemplatePage() {
   return (
     <>
       <TopBar title="プロトコル作成" />
-      <div className="p-6 max-w-3xl">
+      <div className="p-4 sm:p-6 max-w-3xl">
         <Link
           href="/strength/templates"
           className="inline-flex items-center gap-1 mb-4 text-sm text-slate-400 hover:text-white"

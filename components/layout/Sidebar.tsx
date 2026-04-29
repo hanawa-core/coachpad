@@ -45,7 +45,7 @@ const athleteNav = [
   { href: '/settings', label: '設定', icon: Settings },
 ]
 
-export function Sidebar() {
+export function Sidebar({ onNavigate }: { onNavigate?: () => void } = {}) {
   const { user, profile } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
@@ -65,6 +65,10 @@ export function Sidebar() {
   const handleLogout = async () => {
     await logOut()
     router.replace('/login')
+  }
+
+  const handleNavClick = () => {
+    onNavigate?.()
   }
 
   return (
@@ -99,6 +103,7 @@ export function Sidebar() {
             <Link
               key={href}
               href={href}
+              onClick={handleNavClick}
               className={clsx(
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors relative',
                 active

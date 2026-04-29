@@ -88,7 +88,7 @@ export default function InitialTestsPage() {
     return (
       <>
         <TopBar title="初期テストガイド" />
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <p className="text-sm text-slate-400">この機能は選手のみ利用できます</p>
         </div>
       </>
@@ -125,7 +125,7 @@ export default function InitialTestsPage() {
   return (
     <>
       <TopBar title="初期テストガイド" />
-      <div className="p-6 max-w-2xl space-y-4">
+      <div className="p-4 sm:p-6 max-w-2xl space-y-4">
         <Link
           href="/settings"
           className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white"

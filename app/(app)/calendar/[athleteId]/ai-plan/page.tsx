@@ -54,7 +54,7 @@ export default function AIPlanPage() {
     return (
       <>
         <TopBar title="AI プラン作成" />
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <p className="text-sm text-slate-400">権限がありません</p>
         </div>
       </>
@@ -142,7 +142,7 @@ export default function AIPlanPage() {
   return (
     <>
       <TopBar title={athlete ? `${athlete.displayName} の AI プラン` : 'AI プラン'} />
-      <div className="p-6 max-w-3xl space-y-4">
+      <div className="p-4 sm:p-6 max-w-3xl space-y-4">
         <Link
           href={`/calendar/${athleteId}`}
           className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white"

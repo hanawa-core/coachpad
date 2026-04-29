@@ -31,7 +31,7 @@ export default function WellnessPage() {
     return (
       <>
         <TopBar title="Wellness" />
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <p className="text-sm text-slate-400">この機能は選手のみ利用できます</p>
         </div>
       </>
@@ -41,7 +41,7 @@ export default function WellnessPage() {
   return (
     <>
       <TopBar title="Wellness" />
-      <div className="p-6 max-w-3xl space-y-4">
+      <div className="p-4 sm:p-6 max-w-3xl space-y-4">
         {/* 本日の入力 */}
         {user && (
           <WellnessForm athleteId={user.uid} onSaved={() => setRefreshKey((k) => k + 1)} />

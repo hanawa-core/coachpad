@@ -26,7 +26,7 @@ export default function AthletesPage() {
     return (
       <>
         <TopBar title="選手一覧" />
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <p className="text-sm text-slate-400">権限がありません</p>
         </div>
       </>
@@ -36,7 +36,7 @@ export default function AthletesPage() {
   return (
     <>
       <TopBar title="選手一覧" />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="rounded-xl border border-slate-800 bg-slate-900">
           {loading ? (
             <div className="px-6 py-12 text-center">

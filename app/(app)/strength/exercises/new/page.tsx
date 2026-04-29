@@ -60,7 +60,7 @@ export default function NewExercisePage() {
   return (
     <>
       <TopBar title="種目を追加" />
-      <div className="p-6 max-w-2xl">
+      <div className="p-4 sm:p-6 max-w-2xl">
         <Link
           href="/strength/exercises"
           className="inline-flex items-center gap-1 mb-4 text-sm text-slate-400 hover:text-white"

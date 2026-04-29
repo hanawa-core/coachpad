@@ -32,7 +32,7 @@ export default function AthleteCalendarPage() {
     return (
       <>
         <TopBar title="カレンダー" />
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <p className="text-sm text-slate-400">権限がありません</p>
         </div>
       </>
@@ -42,7 +42,7 @@ export default function AthleteCalendarPage() {
   return (
     <>
       <TopBar title={athlete ? `${athlete.displayName} のカレンダー` : 'カレンダー'} />
-      <div className="p-6 space-y-4">
+      <div className="p-4 sm:p-6 space-y-4">
         <div className="flex items-center justify-between">
           <Link
             href="/athletes"

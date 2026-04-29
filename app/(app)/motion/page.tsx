@@ -31,7 +31,7 @@ export default function MotionAnalysesPage() {
   return (
     <>
       <TopBar title="動作分析" />
-      <div className="p-6 space-y-4">
+      <div className="p-4 sm:p-6 space-y-4">
         <div className="flex items-center justify-between">
           <p className="text-sm text-slate-400">
             {profile?.role === 'coach'

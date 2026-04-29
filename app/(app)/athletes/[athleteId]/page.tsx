@@ -40,7 +40,7 @@ export default function AthleteDetailPage() {
     return (
       <>
         <TopBar title="選手詳細" />
-        <div className="p-6"><p className="text-sm text-slate-400">権限がありません</p></div>
+        <div className="p-4 sm:p-6"><p className="text-sm text-slate-400">権限がありません</p></div>
       </>
     )
   }
@@ -48,7 +48,7 @@ export default function AthleteDetailPage() {
   return (
     <>
       <TopBar title={athlete?.displayName ?? '選手詳細'} />
-      <div className="p-6 space-y-4">
+      <div className="p-4 sm:p-6 space-y-4">
         <Link href="/athletes" className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white">
           <ArrowLeft className="h-4 w-4" />
           選手一覧

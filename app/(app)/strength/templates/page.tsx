@@ -57,7 +57,7 @@ export default function StrengthTemplatesPage() {
     return (
       <>
         <TopBar title="プロトコル" />
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <p className="text-sm text-slate-400">この機能はコーチのみ利用できます</p>
         </div>
       </>
@@ -67,7 +67,7 @@ export default function StrengthTemplatesPage() {
   return (
     <>
       <TopBar title="筋トレメニュー" />
-      <div className="p-6 space-y-4">
+      <div className="p-4 sm:p-6 space-y-4">
         <div className="flex flex-wrap items-center justify-end gap-2">
           <Link
             href="/strength/templates/ai"

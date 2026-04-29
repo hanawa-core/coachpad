@@ -26,7 +26,7 @@ export default function TeamPage() {
     return (
       <>
         <TopBar title="選手管理" />
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <p className="text-sm text-slate-400">この機能はコーチのみ利用できます</p>
         </div>
       </>
@@ -54,7 +54,7 @@ export default function TeamPage() {
   return (
     <>
       <TopBar title="選手管理" />
-      <div className="p-6 space-y-4 max-w-3xl">
+      <div className="p-4 sm:p-6 space-y-4 max-w-3xl">
         <Link
           href="/settings"
           className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white"
