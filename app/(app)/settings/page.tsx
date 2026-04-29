@@ -5,7 +5,7 @@ import { useAuth } from '@/components/providers/AuthProvider'
 import { TopBar } from '@/components/layout/TopBar'
 import { StravaCard } from '@/components/strava/StravaCard'
 import Link from 'next/link'
-import { Users, Sparkles, User as UserIcon, Trophy } from 'lucide-react'
+import { Users, Sparkles, User as UserIcon, Trophy, FlaskConical } from 'lucide-react'
 
 export default function SettingsPage() {
   const { profile } = useAuth()
@@ -74,6 +74,27 @@ export default function SettingsPage() {
               <span className="text-slate-500">→</span>
             </Link>
           </>
+        )}
+
+        {/* 初期テストガイド（選手のみ） */}
+        {profile?.role === 'athlete' && (
+          <Link
+            href="/settings/tests"
+            className="flex items-center justify-between rounded-xl border border-purple-700/50 bg-purple-950/20 p-6 hover:bg-purple-950/30 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-purple-500/20 p-2.5 text-purple-400">
+                <FlaskConical className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-white">初期テストガイド</h3>
+                <p className="text-xs text-slate-400">
+                  20分走・5kmTT などから LTHR・閾値ペース・FTP を自動計算
+                </p>
+              </div>
+            </div>
+            <span className="text-slate-500">→</span>
+          </Link>
         )}
 
         {/* ターゲットレース（選手のみ） */}
