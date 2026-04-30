@@ -169,7 +169,7 @@ export default function TermsPage() {
 
       <div className="mt-12 border-t border-slate-800 pt-6 text-sm text-slate-400">
         <p>合同会社コアデザイン</p>
-        <p>連絡先：s.hanawa@coredesign-athlete.com</p>
+        <p>連絡先：info@coredesign-athlete.com</p>
         <p className="mt-2">以上</p>
       </div>
     </article>

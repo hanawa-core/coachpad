@@ -163,7 +163,7 @@ export default function PrivacyPage() {
         <div className="mt-3 rounded-lg border border-slate-800 bg-slate-900 p-4 text-sm">
           <p className="font-semibold text-white">合同会社コアデザイン</p>
           <p className="mt-1">個人情報保護管理者：塙 翔太</p>
-          <p>Eメール：s.hanawa@coredesign-athlete.com</p>
+          <p>Eメール：info@coredesign-athlete.com</p>
         </div>
       </Section>
 
