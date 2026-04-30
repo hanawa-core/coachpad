@@ -12,7 +12,6 @@ import {
   Bell,
   Settings,
   LogOut,
-  Activity,
   Video,
   Heart,
   MessageCircle,
@@ -45,6 +44,38 @@ const athleteNav = [
   { href: '/settings', label: '設定', icon: Settings },
 ]
 
+function EcgLogo() {
+  return (
+    <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-slate-950 shrink-0">
+      <svg width="20" height="20" viewBox="0 0 100 100" fill="none">
+        {/* グリッド */}
+        <line x1="12" y1="30" x2="88" y2="30" stroke="#1E293B" strokeWidth="3" />
+        <line x1="12" y1="45" x2="88" y2="45" stroke="#1E293B" strokeWidth="3" />
+        <line x1="12" y1="60" x2="88" y2="60" stroke="#1E293B" strokeWidth="3" />
+        <line x1="12" y1="75" x2="88" y2="75" stroke="#1E293B" strokeWidth="3" />
+        <line x1="12" y1="25" x2="12" y2="80" stroke="#1E293B" strokeWidth="3" />
+        <line x1="30" y1="25" x2="30" y2="80" stroke="#1E293B" strokeWidth="3" />
+        <line x1="48" y1="25" x2="48" y2="80" stroke="#1E293B" strokeWidth="3" />
+        <line x1="66" y1="25" x2="66" y2="80" stroke="#1E293B" strokeWidth="3" />
+        <line x1="84" y1="25" x2="84" y2="80" stroke="#1E293B" strokeWidth="3" />
+        {/* ECG ライン */}
+        <polyline
+          points="12,52 22,52 25,52 27,30 29,52 31,68 35,52 44,52 54,52 58,52 62,26 64,52 66,62 70,52 80,52 88,52"
+          stroke="#10B981"
+          strokeWidth="6"
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {/* ピーク */}
+        <circle cx="62" cy="26" r="7" fill="#FBBF24" />
+        {/* 右端ドット */}
+        <circle cx="88" cy="52" r="5" fill="#10B981" />
+      </svg>
+    </div>
+  )
+}
+
 export function Sidebar({ onNavigate }: { onNavigate?: () => void } = {}) {
   const { user, profile } = useAuth()
   const pathname = usePathname()
@@ -74,8 +105,8 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void } = {}) {
   return (
     <aside className="flex h-full w-60 flex-col bg-slate-900 border-r border-slate-800">
       {/* ロゴ */}
-      <div className="flex items-center gap-2 px-6 py-5 border-b border-slate-800">
-        <Activity className="h-6 w-6 text-emerald-400" />
+      <div className="flex items-center gap-2.5 px-6 py-5 border-b border-slate-800">
+        <EcgLogo />
         <span className="text-lg font-bold text-white">CoachPad</span>
       </div>
 
