@@ -1,5 +1,5 @@
 /**
- * アイコン候補プレビューページ
+ * アイコン候補プレビューページ（第2弾）
  * /icon-preview にアクセスすると6パターンのアイコン案を確認できる
  */
 
@@ -12,63 +12,63 @@ export default function IconPreviewPage() {
     <div className="min-h-screen bg-slate-950 px-4 py-10 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-5xl">
         <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-          CoachPad アイコン候補
+          CoachPad アイコン候補（第2弾）
         </h1>
         <p className="text-sm text-slate-400 mb-8">
-          コーチング・ランニングをイメージした6パターン。気に入ったものを採用してください。
+          より洗練された6案。コーチング × 耐久系競技の本質を、ミニマル・抽象的な表現で。
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <IconCard
-            name="A. マウンテン・トレイル"
-            desc="山頂と登坂ライン。トレイルランナーの『山を駆け上がる』を象徴。シンプルで識別しやすい。"
+            name="G. 等高線（Topography）"
+            desc="トレイル地図の等高線。山頂が中心に向かって収束する。実用書のような知的・洗練さ。"
           >
-            <IconA />
+            <IconG />
           </IconCard>
 
           <IconCard
-            name="B. ランナー・シルエット"
-            desc="走る人の躍動。前傾フォーム＋ストライド感。スポーツ感が強い。"
+            name="H. 山頂の朝日（Sunrise Summit）"
+            desc="山の稜線から昇る朝日。早朝ランの神聖さ・希望・新たな1日の始まりを象徴。"
           >
-            <IconB />
+            <IconH />
           </IconCard>
 
           <IconCard
-            name="C. 脈拍 → ピーク"
-            desc="心拍ライン（データ）が山頂（目標）に上昇。コーチング × データの融合を表現。"
+            name="I. 三峰（Triple Peak）"
+            desc="重なる3つの三角。アルプス三大、レース3峰、Body/Mind/Performance。プレミアム感。"
           >
-            <IconC />
+            <IconI />
           </IconCard>
 
           <IconCard
-            name="D. コンパス・ナビゲーション"
-            desc="羅針盤。『正しい方向に導くコーチ』のメタファー。シャープで知性的。"
+            name="J. 筆山（Brushstroke）"
+            desc="書道の一筆書きで描いた山。日本的・力強い・コーチの『書き込み』とも呼応。"
           >
-            <IconD />
+            <IconJ />
           </IconCard>
 
           <IconCard
-            name="E. シューズ・ストライド"
-            desc="ランニングシューズの足跡。具象的で『走り』が一目瞭然。"
+            name="K. アーク（Arc & Path）"
+            desc="弧の中に登る一本道。シンプルで識別性◎。アプリアイコンとして機能美。"
           >
-            <IconE />
+            <IconK />
           </IconCard>
 
           <IconCard
-            name="F. CP モノグラム"
-            desc="頭文字 C+P を組み合わせた抽象マーク。ブランドロゴとして拡張性が高い。"
+            name="L. ピーク・グラフ"
+            desc="トレーニング負荷グラフが山形に。データドリブンの世界観を抽象化。テック寄り。"
           >
-            <IconF />
+            <IconL />
           </IconCard>
         </div>
 
         <div className="mt-12 rounded-xl border border-slate-800 bg-slate-900 p-6">
           <h2 className="text-lg font-bold text-white mb-3">採用方法</h2>
           <p className="text-sm text-slate-300 mb-3">
-            気に入った候補の番号（A〜F）を伝えてください。`app/icon.tsx` と `app/apple-icon.tsx` を該当デザインに切り替え、PWAアイコン・Stravaアプリ申請用ロゴ等にも展開します。
+            気に入った候補（G〜L）を伝えてください。`app/icon.tsx` と `app/apple-icon.tsx` を該当デザインに切り替え、PWAアイコン・Stravaアプリ申請用ロゴ等にも展開します。
           </p>
           <p className="text-xs text-slate-500">
-            ※ 配色は現在エメラルド（#10B981）+ 背景ダーク（#0F172A）。配色違いも対応可能。
+            ※ 配色違い・線の太さ調整・別シェイプ（円形・正方形・角丸）への変更等にも対応可能。
           </p>
         </div>
       </div>
@@ -97,205 +97,203 @@ function IconCard({
 }
 
 // ============================================================
-// A. マウンテン・トレイル
+// G. Topography（等高線）
 // ============================================================
-function IconA() {
+function IconG() {
   return (
     <svg viewBox="0 0 100 100" className="w-full h-full">
       <rect width="100" height="100" rx="22" fill="#0F172A" />
-      {/* 山 */}
+      {/* 等高線（外→内に小さくなる） */}
       <path
-        d="M15 75 L40 40 L55 58 L70 35 L85 75 Z"
-        fill="#10B981"
-        opacity="0.9"
+        d="M 18 78 Q 50 40 82 78"
+        stroke="#10B981"
+        strokeWidth="2"
+        fill="none"
+        opacity="0.3"
+        strokeLinecap="round"
       />
-      {/* 山の影 */}
-      <path d="M40 40 L55 58 L42 75 L25 75 Z" fill="#059669" opacity="0.7" />
-      {/* トレイルライン */}
       <path
-        d="M20 78 Q35 65 45 60 T68 45 T82 30"
-        stroke="#FBBF24"
-        strokeWidth="3"
+        d="M 25 75 Q 50 45 75 75"
+        stroke="#10B981"
+        strokeWidth="2"
+        fill="none"
+        opacity="0.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M 32 72 Q 50 50 68 72"
+        stroke="#10B981"
+        strokeWidth="2"
+        fill="none"
+        opacity="0.7"
+        strokeLinecap="round"
+      />
+      <path
+        d="M 39 68 Q 50 55 61 68"
+        stroke="#10B981"
+        strokeWidth="2"
+        fill="none"
+        opacity="0.85"
+        strokeLinecap="round"
+      />
+      <path
+        d="M 45 64 Q 50 60 55 64"
+        stroke="#10B981"
+        strokeWidth="2"
+        fill="none"
+        strokeLinecap="round"
+      />
+      {/* 山頂マーカー */}
+      <circle cx="50" cy="62" r="2.5" fill="#FBBF24" />
+    </svg>
+  )
+}
+
+// ============================================================
+// H. Sunrise Summit（山頂の朝日）
+// ============================================================
+function IconH() {
+  return (
+    <svg viewBox="0 0 100 100" className="w-full h-full">
+      <rect width="100" height="100" rx="22" fill="#0F172A" />
+      {/* 太陽（半円） */}
+      <circle cx="50" cy="55" r="22" fill="#FBBF24" opacity="0.9" />
+      {/* 太陽の光輪 */}
+      <circle cx="50" cy="55" r="28" fill="#FBBF24" opacity="0.15" />
+      {/* 山（前景・太陽を半分隠す） */}
+      <path
+        d="M 0 78 L 25 55 L 38 65 L 55 42 L 72 60 L 85 50 L 100 78 Z"
+        fill="#0F172A"
+      />
+      {/* 山の稜線 */}
+      <path
+        d="M 0 78 L 25 55 L 38 65 L 55 42 L 72 60 L 85 50 L 100 78"
+        stroke="#10B981"
+        strokeWidth="2.5"
+        fill="none"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+      {/* 地平線（薄い水平線） */}
+      <line x1="10" y1="78" x2="90" y2="78" stroke="#10B981" strokeWidth="1.5" opacity="0.5" />
+    </svg>
+  )
+}
+
+// ============================================================
+// I. Triple Peak（三峰）
+// ============================================================
+function IconI() {
+  return (
+    <svg viewBox="0 0 100 100" className="w-full h-full">
+      <rect width="100" height="100" rx="22" fill="#0F172A" />
+      {/* 後の山（最も高く・最も淡い） */}
+      <path d="M 50 20 L 88 75 L 12 75 Z" fill="#10B981" opacity="0.25" />
+      {/* 中央の山 */}
+      <path d="M 35 35 L 65 75 L 5 75 Z" fill="#10B981" opacity="0.55" />
+      {/* 前の山（最も鮮やか） */}
+      <path d="M 70 40 L 95 75 L 45 75 Z" fill="#10B981" />
+      {/* 雪冠（最も奥の山） */}
+      <path d="M 50 20 L 56 28 L 50 32 L 44 28 Z" fill="#FBBF24" />
+    </svg>
+  )
+}
+
+// ============================================================
+// J. Brushstroke（筆山）
+// ============================================================
+function IconJ() {
+  return (
+    <svg viewBox="0 0 100 100" className="w-full h-full">
+      <rect width="100" height="100" rx="22" fill="#0F172A" />
+      {/* 一筆書きの山（書道風） */}
+      <path
+        d="M 18 72
+           Q 25 70 32 65
+           Q 40 50 48 30
+           Q 52 25 56 32
+           Q 62 50 72 65
+           Q 78 70 84 72"
+        stroke="#10B981"
+        strokeWidth="9"
+        fill="none"
         strokeLinecap="round"
         strokeLinejoin="round"
-        fill="none"
-        strokeDasharray="2 4"
       />
-      {/* ピークの旗 */}
-      <line x1="70" y1="35" x2="70" y2="22" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" />
-      <path d="M70 22 L78 25 L70 28 Z" fill="#FBBF24" />
+      {/* 朱印風アクセント */}
+      <rect x="68" y="20" width="14" height="14" rx="2" fill="#FBBF24" opacity="0.95" />
+      <text
+        x="75"
+        y="32"
+        fontSize="9"
+        fontWeight="bold"
+        fill="#0F172A"
+        textAnchor="middle"
+        fontFamily="serif"
+      >
+        走
+      </text>
     </svg>
   )
 }
 
 // ============================================================
-// B. ランナー・シルエット
+// K. Arc & Path（アーク内の登り道）
 // ============================================================
-function IconB() {
+function IconK() {
   return (
     <svg viewBox="0 0 100 100" className="w-full h-full">
       <rect width="100" height="100" rx="22" fill="#0F172A" />
-      {/* 円形ベース */}
-      <circle cx="50" cy="50" r="38" fill="#10B981" opacity="0.15" />
-      {/* ランナー */}
-      <g transform="translate(20, 18) scale(2.5)">
-        {/* 頭 */}
-        <circle cx="14" cy="5" r="3" fill="#10B981" />
-        {/* 胴体 */}
-        <path
-          d="M 13 8 L 11 16 L 15 18 L 18 14 L 21 17"
-          stroke="#10B981"
-          strokeWidth="2.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-        {/* 後ろ脚 */}
-        <path
-          d="M 11 16 L 7 22 L 9 25"
-          stroke="#10B981"
-          strokeWidth="2.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-        {/* 前脚 */}
-        <path
-          d="M 15 18 L 18 24 L 16 27"
-          stroke="#10B981"
-          strokeWidth="2.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-      </g>
-      {/* スピードライン */}
-      <line x1="14" y1="42" x2="22" y2="42" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" />
-      <line x1="12" y1="50" x2="20" y2="50" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
-      <line x1="14" y1="58" x2="22" y2="58" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" opacity="0.4" />
-    </svg>
-  )
-}
-
-// ============================================================
-// C. 脈拍 → ピーク
-// ============================================================
-function IconC() {
-  return (
-    <svg viewBox="0 0 100 100" className="w-full h-full">
-      <rect width="100" height="100" rx="22" fill="#0F172A" />
-      {/* 山の影 */}
-      <path d="M0 75 L30 45 L50 60 L75 30 L100 75 Z" fill="#10B981" opacity="0.2" />
-      {/* 脈拍 → ピーク */}
+      {/* 円弧（上半分） */}
       <path
-        d="M 10 55
-           L 20 55
-           L 25 50
-           L 28 60
-           L 32 45
-           L 36 55
-           L 50 55
-           L 65 30
-           L 75 50
-           L 90 50"
+        d="M 18 65 A 32 32 0 0 1 82 65"
         stroke="#10B981"
+        strokeWidth="4"
+        fill="none"
+        strokeLinecap="round"
+      />
+      {/* 道（弧の中を登っていく） */}
+      <path
+        d="M 25 75 Q 38 70 45 60 T 62 45 T 78 30"
+        stroke="#FBBF24"
         strokeWidth="3.5"
         strokeLinecap="round"
         strokeLinejoin="round"
         fill="none"
       />
-      {/* ピーク強調 */}
-      <circle cx="65" cy="30" r="5" fill="#FBBF24" />
-      <circle cx="65" cy="30" r="9" fill="#FBBF24" opacity="0.25" />
+      {/* 到達点 */}
+      <circle cx="78" cy="30" r="4" fill="#FBBF24" />
+      <circle cx="78" cy="30" r="8" fill="#FBBF24" opacity="0.25" />
+      {/* スタート点 */}
+      <circle cx="25" cy="75" r="2.5" fill="#10B981" />
     </svg>
   )
 }
 
 // ============================================================
-// D. コンパス・ナビゲーション
+// L. Peak Graph（ピーク・グラフ）
 // ============================================================
-function IconD() {
+function IconL() {
   return (
     <svg viewBox="0 0 100 100" className="w-full h-full">
       <rect width="100" height="100" rx="22" fill="#0F172A" />
-      {/* 外円 */}
-      <circle cx="50" cy="50" r="33" stroke="#10B981" strokeWidth="3" fill="none" />
-      <circle cx="50" cy="50" r="33" fill="#10B981" opacity="0.08" />
-      {/* 北マーク（小さい三角） */}
-      <path d="M50 12 L46 18 L54 18 Z" fill="#FBBF24" />
-      {/* コンパス針（北：上向き、南：下向き） */}
-      <path d="M50 22 L42 50 L50 46 L58 50 Z" fill="#10B981" />
-      <path d="M50 78 L42 50 L50 54 L58 50 Z" fill="#475569" />
-      {/* 中心点 */}
-      <circle cx="50" cy="50" r="3.5" fill="#FBBF24" />
-      {/* 方位マーカー（小ドット） */}
-      <circle cx="50" cy="20" r="1.5" fill="#10B981" />
-      <circle cx="80" cy="50" r="1.5" fill="#475569" />
-      <circle cx="50" cy="80" r="1.5" fill="#475569" />
-      <circle cx="20" cy="50" r="1.5" fill="#475569" />
-    </svg>
-  )
-}
-
-// ============================================================
-// E. シューズ・ストライド
-// ============================================================
-function IconE() {
-  return (
-    <svg viewBox="0 0 100 100" className="w-full h-full">
-      <rect width="100" height="100" rx="22" fill="#0F172A" />
-      {/* 大きな足跡（前） */}
-      <ellipse cx="58" cy="48" rx="14" ry="22" fill="#10B981" transform="rotate(15 58 48)" />
-      <ellipse cx="55" cy="33" rx="6" ry="7" fill="#10B981" transform="rotate(15 55 33)" />
-      {/* 小さな足跡（後ろ・薄い） */}
-      <ellipse cx="32" cy="68" rx="10" ry="16" fill="#10B981" opacity="0.4" transform="rotate(-10 32 68)" />
-      <ellipse cx="30" cy="57" rx="4.5" ry="5" fill="#10B981" opacity="0.4" transform="rotate(-10 30 57)" />
-      {/* スピードライン */}
+      {/* 棒グラフ風（ピークに向かう） */}
+      <rect x="18" y="60" width="8" height="20" rx="1.5" fill="#10B981" opacity="0.4" />
+      <rect x="30" y="50" width="8" height="30" rx="1.5" fill="#10B981" opacity="0.55" />
+      <rect x="42" y="38" width="8" height="42" rx="1.5" fill="#10B981" opacity="0.7" />
+      <rect x="54" y="28" width="8" height="52" rx="1.5" fill="#10B981" opacity="0.85" />
+      <rect x="66" y="20" width="8" height="60" rx="1.5" fill="#10B981" />
+      {/* ピークライン（バーの上を結ぶ） */}
       <path
-        d="M 70 75 L 85 60"
+        d="M 22 60 L 34 50 L 46 38 L 58 28 L 70 20"
         stroke="#FBBF24"
         strokeWidth="2.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M 75 80 L 88 70"
-        stroke="#FBBF24"
-        strokeWidth="2"
-        strokeLinecap="round"
-        opacity="0.7"
-      />
-    </svg>
-  )
-}
-
-// ============================================================
-// F. CP モノグラム
-// ============================================================
-function IconF() {
-  return (
-    <svg viewBox="0 0 100 100" className="w-full h-full">
-      <rect width="100" height="100" rx="22" fill="#0F172A" />
-      {/* C: 円弧 */}
-      <path
-        d="M 70 30
-           A 22 22 0 1 0 70 70"
-        stroke="#10B981"
-        strokeWidth="9"
         fill="none"
-        strokeLinecap="round"
-      />
-      {/* P: 縦棒 + 上半円 */}
-      <path
-        d="M 55 32 L 55 75
-           M 55 32 L 70 32
-           A 8 8 0 0 1 70 48
-           L 55 48"
-        stroke="#FBBF24"
-        strokeWidth="6"
         strokeLinecap="round"
         strokeLinejoin="round"
-        fill="none"
       />
+      {/* ピーク強調 */}
+      <circle cx="70" cy="20" r="3.5" fill="#FBBF24" />
     </svg>
   )
 }
