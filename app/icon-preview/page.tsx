@@ -1,5 +1,5 @@
 /**
- * アイコン候補プレビューページ（第3弾）— 走る × データ
+ * アイコン候補プレビューページ（第4弾）— コーチング × データ
  */
 
 export const metadata = {
@@ -14,58 +14,58 @@ export default function IconPreviewPage() {
           CoachPad アイコン候補
         </h1>
         <p className="text-sm text-slate-400 mb-8">
-          テーマ：<span className="text-emerald-400">走る</span> ×{' '}
-          <span className="text-amber-400">コーチング（データ）</span>
+          テーマ：<span className="text-emerald-400">コーチング</span> ×{' '}
+          <span className="text-amber-400">データ分析</span>
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <IconCard
-            name="M. パルス・ランナー"
-            desc="心拍ライン（データ）が走者のシルエットに変化。コーチングの『計測 → 動作』の連続性を1つの線で表現。"
+            name="S. ブルズアイ"
+            desc="同心円のターゲットに、外側からデータポイントが中心へ収束。『データに基づく目標達成』を象徴。"
           >
-            <IconM />
+            <IconS />
           </IconCard>
 
           <IconCard
-            name="N. ストライド・グラフ"
-            desc="走るストライドが棒グラフに。各歩 = 1データ。トレーニング負荷の可視化を象徴。"
+            name="T. ダッシュボード"
+            desc="複数のメトリクス（メーター・棒・線）が並ぶコックピット風。一望できる選手管理。"
           >
-            <IconN />
+            <IconT />
           </IconCard>
 
           <IconCard
-            name="O. スピード・ゲージ"
-            desc="半円のスピードメーター内を走るランナー。データに基づく強度管理を直感的に。"
+            name="U. ダイアログ・チャート"
+            desc="吹き出しの中に棒グラフ。『データに基づくフィードバック』というコーチの行為そのもの。"
           >
-            <IconO />
+            <IconU />
           </IconCard>
 
           <IconCard
-            name="P. GPS トレイル"
-            desc="GPSピン＋蛇行する走路＋データポイント。ランニングログ × 位置情報の世界観。"
+            name="V. アナリティック・アイ"
+            desc="眼の虹彩がチャート柄。『見抜く・観察する』コーチの目利き＋データ分析。"
           >
-            <IconP />
+            <IconV />
           </IconCard>
 
           <IconCard
-            name="Q. データ・ストライド"
-            desc="走者の足跡が円グラフのドットに変換される表現。一歩ごとの分析。"
+            name="W. ハブ＆スポーク"
+            desc="中心ハブから放射状にデータ点。コーチを中心に複数選手・指標が繋がるネットワーク。"
           >
-            <IconQ />
+            <IconW />
           </IconCard>
 
           <IconCard
-            name="R. デュアルライン"
-            desc="上：心拍データ／下：走行軌跡。走る動作と生体データを同時に見せる『コーチの視点』。"
+            name="X. レーダー（蜘蛛の巣）"
+            desc="6軸のレーダーチャート。耐久・スピード・体調・回復・技術・経験を一望する分析感。"
           >
-            <IconR />
+            <IconX />
           </IconCard>
         </div>
 
         <div className="mt-12 rounded-xl border border-slate-800 bg-slate-900 p-6">
           <h2 className="text-lg font-bold text-white mb-3">採用方法</h2>
           <p className="text-sm text-slate-300">
-            気に入った候補（M〜R）を伝えてください。`app/icon.tsx` と `app/apple-icon.tsx`
+            気に入った候補（S〜X）を伝えてください。`app/icon.tsx` と `app/apple-icon.tsx`
             を該当デザインに差し替え、PWAアイコン・Strava申請用ロゴ等にも展開します。
           </p>
         </div>
@@ -95,295 +95,234 @@ function IconCard({
 }
 
 // ============================================================
-// M. パルス・ランナー（心拍 → 走者）
+// S. ブルズアイ（同心円ターゲット + 収束するデータ）
 // ============================================================
-function IconM() {
+function IconS() {
   return (
     <svg viewBox="0 0 100 100" className="w-full h-full">
       <rect width="100" height="100" rx="22" fill="#0F172A" />
-      {/* 心拍ライン（左から） */}
-      <path
-        d="M 8 55
-           L 18 55
-           L 22 45
-           L 26 65
-           L 30 50
-           L 36 55"
-        stroke="#FBBF24"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-      {/* つなぎ線 */}
-      <line x1="36" y1="55" x2="44" y2="55" stroke="#FBBF24" strokeWidth="3" strokeLinecap="round" />
-      {/* ランナー（右側に位置） */}
-      <g transform="translate(50, 28)">
-        {/* 頭 */}
-        <circle cx="14" cy="6" r="4" fill="#10B981" />
-        {/* 胴体 */}
-        <path
-          d="M 13 11 L 10 22 L 16 25 L 22 18 L 28 22"
-          stroke="#10B981"
-          strokeWidth="3.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-        {/* 後ろ脚 */}
-        <path
-          d="M 10 22 L 5 32 L 8 38"
-          stroke="#10B981"
-          strokeWidth="3.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-        {/* 前脚 */}
-        <path
-          d="M 16 25 L 22 38 L 18 42"
-          stroke="#10B981"
-          strokeWidth="3.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-      </g>
+      {/* 同心円 */}
+      <circle cx="50" cy="50" r="32" stroke="#10B981" strokeWidth="2" fill="none" opacity="0.3" />
+      <circle cx="50" cy="50" r="22" stroke="#10B981" strokeWidth="2" fill="none" opacity="0.5" />
+      <circle cx="50" cy="50" r="13" stroke="#10B981" strokeWidth="2" fill="none" opacity="0.75" />
+      <circle cx="50" cy="50" r="5" fill="#FBBF24" />
+      {/* 収束する4本のデータライン */}
+      <line x1="14" y1="20" x2="44" y2="46" stroke="#10B981" strokeWidth="2" strokeLinecap="round" />
+      <line x1="86" y1="22" x2="56" y2="46" stroke="#10B981" strokeWidth="2" strokeLinecap="round" />
+      <line x1="16" y1="80" x2="44" y2="56" stroke="#10B981" strokeWidth="2" strokeLinecap="round" />
+      <line x1="84" y1="80" x2="56" y2="56" stroke="#10B981" strokeWidth="2" strokeLinecap="round" />
+      {/* ラインの先端ドット */}
+      <circle cx="14" cy="20" r="2.5" fill="#10B981" />
+      <circle cx="86" cy="22" r="2.5" fill="#10B981" />
+      <circle cx="16" cy="80" r="2.5" fill="#10B981" />
+      <circle cx="84" cy="80" r="2.5" fill="#10B981" />
     </svg>
   )
 }
 
 // ============================================================
-// N. ストライド・グラフ（足跡が棒グラフに）
+// T. ダッシュボード（メーター + 棒グラフ + 線）
 // ============================================================
-function IconN() {
+function IconT() {
   return (
     <svg viewBox="0 0 100 100" className="w-full h-full">
       <rect width="100" height="100" rx="22" fill="#0F172A" />
-      {/* ベースライン */}
-      <line x1="14" y1="80" x2="86" y2="80" stroke="#475569" strokeWidth="1.5" strokeLinecap="round" />
-      {/* 5本の棒（ストライドの進行 = データの上昇） */}
-      <rect x="16" y="65" width="9" height="15" rx="1.5" fill="#10B981" opacity="0.5" />
-      <rect x="29" y="55" width="9" height="25" rx="1.5" fill="#10B981" opacity="0.65" />
-      <rect x="42" y="42" width="9" height="38" rx="1.5" fill="#10B981" opacity="0.8" />
-      <rect x="55" y="32" width="9" height="48" rx="1.5" fill="#10B981" opacity="0.9" />
-      <rect x="68" y="22" width="9" height="58" rx="1.5" fill="#10B981" />
-      {/* 進行方向：トレンドライン（黄） */}
+      {/* 上半円メーター */}
+      <path d="M 18 50 A 18 18 0 0 1 54 50" stroke="#1E293B" strokeWidth="4" fill="none" strokeLinecap="round" />
+      <path d="M 18 50 A 18 18 0 0 1 44 35" stroke="#10B981" strokeWidth="4" fill="none" strokeLinecap="round" />
+      {/* メーター針 */}
+      <line x1="36" y1="50" x2="42" y2="38" stroke="#FBBF24" strokeWidth="2.5" strokeLinecap="round" />
+      <circle cx="36" cy="50" r="2" fill="#FBBF24" />
+      {/* 右上：小さな棒グラフ3本 */}
+      <rect x="62" y="32" width="5" height="14" rx="1" fill="#10B981" opacity="0.5" />
+      <rect x="70" y="26" width="5" height="20" rx="1" fill="#10B981" opacity="0.75" />
+      <rect x="78" y="20" width="5" height="26" rx="1" fill="#10B981" />
+      {/* 下半分：折れ線グラフ */}
+      <line x1="14" y1="78" x2="86" y2="78" stroke="#1E293B" strokeWidth="1.5" />
       <path
-        d="M 20 65 L 33 55 L 46 42 L 59 32 L 72 22"
+        d="M 18 70
+           L 30 64
+           L 42 68
+           L 54 56
+           L 66 60
+           L 78 50"
         stroke="#FBBF24"
         strokeWidth="2.5"
         fill="none"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {/* 矢印先端 */}
-      <path d="M 72 22 L 78 18 M 72 22 L 78 26" stroke="#FBBF24" strokeWidth="2.5" strokeLinecap="round" />
+      {/* 折れ線のドット */}
+      <circle cx="78" cy="50" r="2.5" fill="#FBBF24" />
     </svg>
   )
 }
 
 // ============================================================
-// O. スピード・ゲージ（半円メーター内のランナー）
+// U. ダイアログ・チャート（吹き出し + 棒グラフ）
 // ============================================================
-function IconO() {
+function IconU() {
   return (
     <svg viewBox="0 0 100 100" className="w-full h-full">
       <rect width="100" height="100" rx="22" fill="#0F172A" />
-      {/* ゲージ背景アーク */}
+      {/* 吹き出し本体 */}
       <path
-        d="M 18 70 A 32 32 0 0 1 82 70"
+        d="M 18 25
+           Q 18 18 25 18
+           L 75 18
+           Q 82 18 82 25
+           L 82 60
+           Q 82 67 75 67
+           L 45 67
+           L 32 80
+           L 35 67
+           L 25 67
+           Q 18 67 18 60 Z"
+        fill="#10B981"
+        opacity="0.15"
+      />
+      <path
+        d="M 18 25
+           Q 18 18 25 18
+           L 75 18
+           Q 82 18 82 25
+           L 82 60
+           Q 82 67 75 67
+           L 45 67
+           L 32 80
+           L 35 67
+           L 25 67
+           Q 18 67 18 60 Z"
+        stroke="#10B981"
+        strokeWidth="2.5"
+        fill="none"
+        strokeLinejoin="round"
+      />
+      {/* 中の棒グラフ */}
+      <rect x="28" y="48" width="6" height="12" rx="1" fill="#10B981" />
+      <rect x="38" y="40" width="6" height="20" rx="1" fill="#10B981" />
+      <rect x="48" y="32" width="6" height="28" rx="1" fill="#10B981" />
+      <rect x="58" y="38" width="6" height="22" rx="1" fill="#10B981" />
+      <rect x="68" y="28" width="6" height="32" rx="1" fill="#FBBF24" />
+    </svg>
+  )
+}
+
+// ============================================================
+// V. アナリティック・アイ（眼 + チャート虹彩）
+// ============================================================
+function IconV() {
+  return (
+    <svg viewBox="0 0 100 100" className="w-full h-full">
+      <rect width="100" height="100" rx="22" fill="#0F172A" />
+      {/* 眼の輪郭（アーモンド型） */}
+      <path
+        d="M 14 50 Q 50 22 86 50 Q 50 78 14 50 Z"
+        fill="#10B981"
+        opacity="0.1"
+      />
+      <path
+        d="M 14 50 Q 50 22 86 50 Q 50 78 14 50 Z"
+        stroke="#10B981"
+        strokeWidth="2.5"
+        fill="none"
+        strokeLinejoin="round"
+      />
+      {/* 虹彩（外） */}
+      <circle cx="50" cy="50" r="16" stroke="#10B981" strokeWidth="2" fill="#0F172A" />
+      {/* 虹彩内のチャート（折れ線） */}
+      <path
+        d="M 38 56 L 44 50 L 48 53 L 54 44 L 60 48"
+        stroke="#FBBF24"
+        strokeWidth="2"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="38" cy="56" r="1.5" fill="#FBBF24" />
+      <circle cx="60" cy="48" r="1.5" fill="#FBBF24" />
+      {/* 瞳孔 */}
+      <circle cx="50" cy="50" r="3" fill="#FBBF24" />
+      {/* キャッチライト */}
+      <circle cx="53" cy="46" r="1.2" fill="#FFFFFF" />
+    </svg>
+  )
+}
+
+// ============================================================
+// W. ハブ＆スポーク（中心 + 放射ノード）
+// ============================================================
+function IconW() {
+  return (
+    <svg viewBox="0 0 100 100" className="w-full h-full">
+      <rect width="100" height="100" rx="22" fill="#0F172A" />
+      {/* 中心ハブの外輪 */}
+      <circle cx="50" cy="50" r="11" fill="#10B981" opacity="0.15" />
+      <circle cx="50" cy="50" r="11" stroke="#10B981" strokeWidth="2" fill="none" />
+      {/* 中心ハブ */}
+      <circle cx="50" cy="50" r="5" fill="#FBBF24" />
+      {/* 6本のスポーク + ノード */}
+      {/* 上 */}
+      <line x1="50" y1="50" x2="50" y2="22" stroke="#10B981" strokeWidth="2" />
+      <circle cx="50" cy="20" r="4" fill="#10B981" />
+      {/* 右上 */}
+      <line x1="50" y1="50" x2="74" y2="34" stroke="#10B981" strokeWidth="2" />
+      <circle cx="76" cy="32" r="4" fill="#10B981" />
+      {/* 右下 */}
+      <line x1="50" y1="50" x2="74" y2="66" stroke="#10B981" strokeWidth="2" />
+      <circle cx="76" cy="68" r="4" fill="#10B981" />
+      {/* 下 */}
+      <line x1="50" y1="50" x2="50" y2="78" stroke="#10B981" strokeWidth="2" />
+      <circle cx="50" cy="80" r="4" fill="#10B981" />
+      {/* 左下 */}
+      <line x1="50" y1="50" x2="26" y2="66" stroke="#10B981" strokeWidth="2" />
+      <circle cx="24" cy="68" r="4" fill="#10B981" />
+      {/* 左上 */}
+      <line x1="50" y1="50" x2="26" y2="34" stroke="#10B981" strokeWidth="2" />
+      <circle cx="24" cy="32" r="4" fill="#10B981" />
+    </svg>
+  )
+}
+
+// ============================================================
+// X. レーダー（6軸の蜘蛛の巣 + プロット）
+// ============================================================
+function IconX() {
+  return (
+    <svg viewBox="0 0 100 100" className="w-full h-full">
+      <rect width="100" height="100" rx="22" fill="#0F172A" />
+      {/* 軸（6本：12時、2時、4時、6時、8時、10時方向） */}
+      <g stroke="#1E293B" strokeWidth="1.5">
+        <line x1="50" y1="50" x2="50" y2="18" />
+        <line x1="50" y1="50" x2="78" y2="34" />
+        <line x1="50" y1="50" x2="78" y2="66" />
+        <line x1="50" y1="50" x2="50" y2="82" />
+        <line x1="50" y1="50" x2="22" y2="66" />
+        <line x1="50" y1="50" x2="22" y2="34" />
+      </g>
+      {/* 内側多角形（薄い） */}
+      <polygon
+        points="50,30 67,40 67,60 50,70 33,60 33,40"
         stroke="#1E293B"
-        strokeWidth="6"
+        strokeWidth="1"
         fill="none"
-        strokeLinecap="round"
       />
-      {/* ゲージ進捗（緑→黄、3/4くらい埋まる） */}
-      <path
-        d="M 18 70 A 32 32 0 0 1 78 50"
+      {/* データプロットエリア（緑の透過多角形） */}
+      <polygon
+        points="50,22 72,38 70,62 50,76 30,58 28,38"
+        fill="#10B981"
+        opacity="0.3"
         stroke="#10B981"
-        strokeWidth="6"
-        fill="none"
-        strokeLinecap="round"
-      />
-      {/* 目盛り点（5つ） */}
-      <circle cx="18" cy="70" r="2" fill="#475569" />
-      <circle cx="28" cy="48" r="2" fill="#475569" />
-      <circle cx="50" cy="38" r="2" fill="#475569" />
-      <circle cx="72" cy="48" r="2" fill="#475569" />
-      <circle cx="82" cy="70" r="2" fill="#FBBF24" />
-      {/* ランナー（中央に小さく） */}
-      <g transform="translate(38, 53) scale(0.85)">
-        <circle cx="14" cy="6" r="3" fill="#FBBF24" />
-        <path
-          d="M 13 10 L 10 18 L 14 21 L 19 16 L 24 19"
-          stroke="#FBBF24"
-          strokeWidth="2.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-        <path
-          d="M 10 18 L 6 26 L 8 30"
-          stroke="#FBBF24"
-          strokeWidth="2.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-        <path
-          d="M 14 21 L 18 30 L 16 33"
-          stroke="#FBBF24"
-          strokeWidth="2.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-      </g>
-    </svg>
-  )
-}
-
-// ============================================================
-// P. GPS トレイル（ピン＋曲線＋データドット）
-// ============================================================
-function IconP() {
-  return (
-    <svg viewBox="0 0 100 100" className="w-full h-full">
-      <rect width="100" height="100" rx="22" fill="#0F172A" />
-      {/* 蛇行する走路 */}
-      <path
-        d="M 16 78
-           Q 30 78 32 65
-           T 50 50
-           T 70 35
-           L 76 28"
-        stroke="#10B981"
-        strokeWidth="3.5"
-        fill="none"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeDasharray="0 0"
-      />
-      {/* スタートドット */}
-      <circle cx="16" cy="78" r="3" fill="#10B981" />
-      {/* 中継データドット */}
-      <circle cx="32" cy="65" r="2.5" fill="#FBBF24" />
-      <circle cx="50" cy="50" r="2.5" fill="#FBBF24" />
-      <circle cx="70" cy="35" r="2.5" fill="#FBBF24" />
-      {/* 到達GPSピン */}
-      <g transform="translate(76, 28)">
-        <path
-          d="M 0 -8 C -7 -8 -7 1 0 8 C 7 1 7 -8 0 -8 Z"
-          fill="#FBBF24"
-          transform="translate(0, -2)"
-        />
-        <circle cx="0" cy="-6" r="2.5" fill="#0F172A" />
-      </g>
-    </svg>
-  )
-}
-
-// ============================================================
-// Q. データ・ストライド（足跡 + データ円）
-// ============================================================
-function IconQ() {
-  return (
-    <svg viewBox="0 0 100 100" className="w-full h-full">
-      <rect width="100" height="100" rx="22" fill="#0F172A" />
-      {/* 円形ベース（パフォーマンスメーター風） */}
-      <circle cx="50" cy="50" r="35" stroke="#1E293B" strokeWidth="3" fill="none" />
-      {/* 進捗弧（3/4） */}
-      <circle
-        cx="50"
-        cy="50"
-        r="35"
-        stroke="#10B981"
-        strokeWidth="3"
-        fill="none"
-        strokeDasharray="165 220"
-        strokeDashoffset="-55"
-        strokeLinecap="round"
-        transform="rotate(-90 50 50)"
-      />
-      {/* 中央：3つの足跡（ストライド進行） */}
-      <ellipse cx="32" cy="58" rx="4" ry="6" fill="#10B981" opacity="0.4" transform="rotate(-15 32 58)" />
-      <ellipse cx="50" cy="50" rx="5" ry="7.5" fill="#10B981" opacity="0.7" />
-      <ellipse cx="68" cy="42" rx="6" ry="9" fill="#FBBF24" transform="rotate(15 68 42)" />
-      {/* 進行ライン */}
-      <path
-        d="M 32 58 L 50 50 L 68 42"
-        stroke="#FBBF24"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeDasharray="2 3"
-        fill="none"
-        opacity="0.6"
-      />
-    </svg>
-  )
-}
-
-// ============================================================
-// R. デュアルライン（心拍 + 走行軌跡）
-// ============================================================
-function IconR() {
-  return (
-    <svg viewBox="0 0 100 100" className="w-full h-full">
-      <rect width="100" height="100" rx="22" fill="#0F172A" />
-      {/* 区切り線 */}
-      <line x1="14" y1="50" x2="86" y2="50" stroke="#1E293B" strokeWidth="1" strokeDasharray="2 3" />
-      {/* 上段：心拍ライン */}
-      <path
-        d="M 14 30
-           L 24 30
-           L 28 22
-           L 32 38
-           L 36 18
-           L 40 30
-           L 50 30
-           L 54 26
-           L 58 34
-           L 62 22
-           L 66 30
-           L 86 30"
-        stroke="#FBBF24"
         strokeWidth="2.5"
-        fill="none"
-        strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {/* 上段ラベル */}
-      <text x="14" y="14" fontSize="7" fill="#FBBF24" fontWeight="bold" letterSpacing="0.5">
-        BPM
-      </text>
-      {/* 下段：走行ペース上昇ライン（緩やかに右肩上がり） */}
-      <path
-        d="M 14 78
-           Q 30 76 38 70
-           T 60 60
-           T 86 56"
-        stroke="#10B981"
-        strokeWidth="3"
-        fill="none"
-        strokeLinecap="round"
-      />
-      {/* 下段の走者シンボル（小さく終点に） */}
-      <g transform="translate(76, 50)">
-        <circle cx="0" cy="0" r="2.5" fill="#10B981" />
-        <path
-          d="M -1 2 L -3 7 L 0 9 L 3 6 L 6 8"
-          stroke="#10B981"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-      </g>
-      {/* 下段ラベル */}
-      <text x="14" y="92" fontSize="7" fill="#10B981" fontWeight="bold" letterSpacing="0.5">
-        PACE
-      </text>
+      {/* プロットドット */}
+      <circle cx="50" cy="22" r="2.5" fill="#FBBF24" />
+      <circle cx="72" cy="38" r="2.5" fill="#FBBF24" />
+      <circle cx="70" cy="62" r="2.5" fill="#FBBF24" />
+      <circle cx="50" cy="76" r="2.5" fill="#FBBF24" />
+      <circle cx="30" cy="58" r="2.5" fill="#FBBF24" />
+      <circle cx="28" cy="38" r="2.5" fill="#FBBF24" />
     </svg>
   )
 }
