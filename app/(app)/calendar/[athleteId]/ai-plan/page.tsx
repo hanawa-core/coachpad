@@ -40,6 +40,7 @@ export default function AIPlanPage() {
   const [plan, setPlan] = useState<PlannedWorkout[]>([])
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [saving, setSaving] = useState(false)
+  const [savedCount, setSavedCount] = useState(0)
 
   useEffect(() => {
     getAthleteCache(athleteId).then((a) => {
@@ -62,7 +63,11 @@ export default function AIPlanPage() {
   }
 
   const handleGenerate = async () => {
-    if (!user || !athlete) return
+    if (!user) return
+    if (!athlete) {
+      setError('選手情報を読み込めませんでした。ページを再読み込みしてください。')
+      return
+    }
     setError('')
     setPlan([])
     setRationale('')
@@ -109,7 +114,9 @@ export default function AIPlanPage() {
   const handleSave = async () => {
     if (!user || !athlete) return
     setSaving(true)
+    setSavedCount(0)
     try {
+      let count = 0
       for (const idx of selected) {
         const w = plan[idx]
         await createPlannedWorkout({
@@ -132,8 +139,14 @@ export default function AIPlanPage() {
           completed: null,
           coachFeedback: null,
         })
+        count++
+        setSavedCount(count)
       }
+      // 完了後2秒待ってからリダイレクト
+      await new Promise((r) => setTimeout(r, 1500))
       router.replace(`/calendar/${athleteId}`)
+    } catch (e: any) {
+      setError(e.message || '保存中にエラーが発生しました')
     } finally {
       setSaving(false)
     }
@@ -321,12 +334,25 @@ export default function AIPlanPage() {
               ))}
             </ul>
 
+            {saving && savedCount > 0 && (
+              <div className="rounded-lg bg-emerald-900/40 border border-emerald-700 px-3 py-2 text-sm text-emerald-400 text-center">
+                作成中... {savedCount} / {selected.size} 件追加済み
+              </div>
+            )}
+            {!saving && savedCount > 0 && (
+              <div className="rounded-lg bg-emerald-900/40 border border-emerald-700 px-3 py-2 text-sm text-emerald-400 text-center">
+                <Check className="inline h-4 w-4 mr-1" />
+                作成完了 — {savedCount} 件をカレンダーに追加しました。移動中...
+              </div>
+            )}
             <button
               onClick={handleSave}
               disabled={saving || selected.size === 0}
               className="w-full rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-60"
             >
-              {saving ? '保存中...' : `選択中の ${selected.size} 日をカレンダーに追加`}
+              {saving
+                ? `作成中... (${savedCount}/${selected.size})`
+                : `選択中の ${selected.size} 日をカレンダーに追加`}
             </button>
           </>
         )}

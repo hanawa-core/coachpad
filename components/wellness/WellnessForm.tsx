@@ -51,6 +51,9 @@ export function WellnessForm({ athleteId, date: dateProp, onSaved }: Props) {
         setWeight(entry.weight?.toString() ?? '')
         setNotes(entry.notes ?? '')
       }
+    }).catch(() => {
+      // Firestoreエラー時もフォームを表示
+    }).finally(() => {
       setLoading(false)
     })
   }, [athleteId, date])

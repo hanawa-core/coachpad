@@ -23,6 +23,9 @@ export function WellnessQuickCard({ athleteId }: Props) {
     ]).then(([t, r]) => {
       setToday(t)
       setRecent(r)
+    }).catch(() => {
+      // Firestoreエラー時もスケルトンを解除
+    }).finally(() => {
       setLoading(false)
     })
   }, [athleteId])

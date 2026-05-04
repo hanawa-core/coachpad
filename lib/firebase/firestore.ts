@@ -912,6 +912,13 @@ export async function markChatRead(threadId: string, userId: string) {
 }
 
 /**
+ * チャットメッセージ削除（送信者本人のみ）
+ */
+export async function deleteChatMessage(threadId: string, messageId: string) {
+  await deleteDoc(doc(db, 'chats', threadId, 'messages', messageId))
+}
+
+/**
  * 未読カウント計算（Firestoreインデックス不要なクライアントサイド計算）
  */
 export function computeUnreadCount(thread: ChatThread, userId: string): number {

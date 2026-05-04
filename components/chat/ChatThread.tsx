@@ -1,13 +1,14 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Send, Image as ImageIcon, X } from 'lucide-react'
+import { Send, Image as ImageIcon, X, Trash2 } from 'lucide-react'
 import { useAuth } from '@/components/providers/AuthProvider'
 import {
   subscribeChatMessages,
   sendChatMessage,
   markChatRead,
   ensureChatThread,
+  deleteChatMessage,
 } from '@/lib/firebase/firestore'
 import { uploadChatImage } from '@/lib/firebase/chat-image'
 import type { ChatMessage } from '@/types'
@@ -34,6 +35,7 @@ export function ChatThread({ coachId, athleteId, otherName, selfName, selfRole }
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [threadId, setThreadId] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   // スレッド初期化
@@ -80,6 +82,17 @@ export function ChatThread({ coachId, athleteId, otherName, selfName, selfRole }
     setImageFile(null)
     if (imagePreview) URL.revokeObjectURL(imagePreview)
     setImagePreview(null)
+  }
+
+  const handleDelete = async (messageId: string) => {
+    if (!threadId) return
+    if (!confirm('このメッセージを削除しますか？')) return
+    setDeletingId(messageId)
+    try {
+      await deleteChatMessage(threadId, messageId)
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   const handleSend = async () => {
@@ -163,7 +176,17 @@ export function ChatThread({ coachId, athleteId, otherName, selfName, selfRole }
                     </span>
                   </div>
                 )}
-                <div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                <div className={`flex items-end gap-1 group ${isMe ? 'justify-end' : 'justify-start'}`}>
+                  {isMe && (
+                    <button
+                      onClick={() => handleDelete(m.id)}
+                      disabled={deletingId === m.id}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded text-slate-500 hover:text-red-400 disabled:opacity-40 shrink-0"
+                      title="削除"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                   <div
                     className={`max-w-[75%] rounded-2xl px-4 py-2 ${
                       isMe
