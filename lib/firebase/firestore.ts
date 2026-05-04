@@ -89,27 +89,21 @@ export async function getAthleteCache(athleteId: string): Promise<AthleteCache |
 }
 
 /**
- * 選手のプランを設定（athletesキャッシュ + usersドキュメント両方を更新）
+ * 選手のプランを設定（athletes キャッシュ更新）
+ * users ドキュメントはルール上コーチが直接書けないため API ルート /api/athletes/set-plan で更新する
  */
 export async function setAthletePlan(
   athleteId: string,
   plan: AthletePlan | null
 ): Promise<void> {
-  // users ドキュメントを更新
-  await updateDoc(doc(db, 'users', athleteId), { plan })
-
-  // athletes キャッシュも更新（doc ID == userId）
   const directRef = doc(db, 'athletes', athleteId)
   const directSnap = await getDoc(directRef)
   if (directSnap.exists()) {
     await updateDoc(directRef, { plan })
-    return
-  }
-  // 旧データへのフォールバック
-  const q = query(collection(db, 'athletes'), where('userId', '==', athleteId))
-  const snap = await getDocs(q)
-  if (!snap.empty) {
-    await updateDoc(snap.docs[0].ref, { plan })
+  } else {
+    const q = query(collection(db, 'athletes'), where('userId', '==', athleteId))
+    const snap = await getDocs(q)
+    if (!snap.empty) await updateDoc(snap.docs[0].ref, { plan })
   }
 }
 

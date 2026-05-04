@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Calendar, MessageCircle } from 'lucide-react'
 import { useAuth } from '@/components/providers/AuthProvider'
+import { getAuth } from 'firebase/auth'
 import { TopBar } from '@/components/layout/TopBar'
 import { getAthleteCache, setAthletePlan } from '@/lib/firebase/firestore'
 import { CalendarMonthView } from '@/components/calendar/CalendarMonthView'
@@ -30,6 +31,15 @@ export default function AthleteDetailPage() {
     setPlanSaving(true)
     try {
       await setAthletePlan(id, plan)
+      // users ドキュメントも admin SDK 経由で更新
+      const idToken = await getAuth().currentUser?.getIdToken()
+      if (idToken) {
+        await fetch('/api/athletes/set-plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+          body: JSON.stringify({ athleteId: id, plan }),
+        })
+      }
       setAthlete((prev) => prev ? { ...prev, plan: plan ?? undefined } : prev)
     } finally {
       setPlanSaving(false)
