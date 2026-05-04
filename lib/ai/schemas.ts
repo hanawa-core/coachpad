@@ -64,6 +64,15 @@ export const StrengthTemplateGenerationSchema = z.object({
 // ランニングプラン生成
 // ============================================================
 
+const StrengthExerciseItemSchema = z.object({
+  libraryExerciseId: z.string().nullable().describe('種目ライブラリのID。ライブラリにある場合は必ず指定'),
+  name: z.string().describe('種目名'),
+  sets: z.number().int().describe('セット数'),
+  reps: z.number().int().nullable().describe('回数。時間制はnull'),
+  durationSec: z.number().int().nullable().describe('実施秒数。回数制はnull'),
+  restSec: z.number().int().describe('セット間休息秒数'),
+})
+
 export const PlannedWorkoutSchema = z.object({
   date: z.string().describe('実施日 YYYY-MM-DD形式'),
   title: z.string().describe('ワークアウト名（例: イージーラン60分、テンポ走15km）'),
@@ -81,6 +90,7 @@ export const PlannedWorkoutSchema = z.object({
   targetDurationMin: z.number().int().nullable().describe('目標時間(分)、なければ null'),
   targetPaceMinPerKm: z.string().nullable().describe('目標ペース「分:秒」形式、なければ null'),
   description: z.string().describe('指示・狙い・補足（200字以内）'),
+  strengthExercises: z.array(StrengthExerciseItemSchema).nullable().describe('筋トレ日の種目リスト（cross_training時のみ設定、それ以外はnull）'),
 })
 
 export const RunningPlanGenerationSchema = z.object({

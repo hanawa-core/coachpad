@@ -3,12 +3,25 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Sparkles, Check } from 'lucide-react'
+import { ArrowLeft, Sparkles, Check, AlertCircle, Dumbbell } from 'lucide-react'
 import { Timestamp } from 'firebase/firestore'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { TopBar } from '@/components/layout/TopBar'
-import { getAthleteCache, createPlannedWorkout } from '@/lib/firebase/firestore'
+import {
+  getAthleteCache,
+  createPlannedWorkout,
+  createStrengthAssignment,
+} from '@/lib/firebase/firestore'
 import { WORKOUT_TYPE_LABELS, type AthleteCache, type WorkoutType } from '@/types'
+
+interface StrengthExerciseItem {
+  libraryExerciseId: string | null
+  name: string
+  sets: number
+  reps: number | null
+  durationSec: number | null
+  restSec: number
+}
 
 interface PlannedWorkout {
   date: string
@@ -18,7 +31,10 @@ interface PlannedWorkout {
   targetDurationMin: number | null
   targetPaceMinPerKm: string | null
   description: string
+  strengthExercises: StrengthExerciseItem[] | null
 }
+
+type ExerciseLibraryMap = Record<string, { name: string; category: string; targetMuscles: string[]; instructions: string }>
 
 export default function AIPlanPage() {
   const params = useParams()
@@ -41,12 +57,15 @@ export default function AIPlanPage() {
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [saving, setSaving] = useState(false)
   const [savedCount, setSavedCount] = useState(0)
+  const [exerciseLibraryMap, setExerciseLibraryMap] = useState<ExerciseLibraryMap>({})
 
   useEffect(() => {
     getAthleteCache(athleteId).then((a) => {
       setAthlete(a)
       if (a?.latestMetrics) {
-        setCurrentFitness(`CTL ${a.latestMetrics.ctl.toFixed(0)} / ATL ${a.latestMetrics.atl.toFixed(0)} / TSB ${a.latestMetrics.tsb.toFixed(0)}`)
+        setCurrentFitness(
+          `CTL ${a.latestMetrics.ctl.toFixed(0)} / ATL ${a.latestMetrics.atl.toFixed(0)} / TSB ${a.latestMetrics.tsb.toFixed(0)}`
+        )
       }
     })
   }, [athleteId])
@@ -97,6 +116,7 @@ export default function AIPlanPage() {
       setRationale(data.plan.rationale)
       setPlan(data.plan.workouts)
       setSelected(new Set(data.plan.workouts.map((_: any, i: number) => i)))
+      if (data.exerciseLibraryMap) setExerciseLibraryMap(data.exerciseLibraryMap)
     } catch (e: any) {
       setError(e.message)
     } finally {
@@ -119,30 +139,67 @@ export default function AIPlanPage() {
       let count = 0
       for (const idx of selected) {
         const w = plan[idx]
-        await createPlannedWorkout({
-          athleteId,
-          coachId: user.uid,
-          date: w.date,
-          type: 'planned',
-          planned: {
-            title: w.title,
-            description: w.description,
-            workoutType: w.workoutType,
-            targetDistanceKm: w.targetDistanceKm,
-            targetDurationMin: w.targetDurationMin,
-            targetPaceMinPerKm: w.targetPaceMinPerKm,
-            targetHeartRateZone: null,
-            notes: '',
-            createdAt: Timestamp.now(),
-            createdBy: user.uid,
-          },
-          completed: null,
-          coachFeedback: null,
-        })
+        const isStrength = w.workoutType === 'cross_training' && w.strengthExercises && w.strengthExercises.length > 0
+
+        if (isStrength) {
+          // 筋トレ日は StrengthAssignment として保存
+          const exercises = w.strengthExercises!.map((ex, i) => {
+            const libItem = ex.libraryExerciseId ? exerciseLibraryMap[ex.libraryExerciseId] : null
+            return {
+              exerciseId: `ai_${i}_${ex.libraryExerciseId ?? ex.name}`,
+              order: i,
+              name: ex.name,
+              category: 'bodyweight' as const,
+              sets: ex.sets,
+              reps: ex.reps,
+              durationSec: ex.durationSec,
+              restSec: ex.restSec,
+              targetWeight: null,
+              instructions: libItem?.instructions ?? '',
+              videoUrl: null,
+              imageUrl: null,
+              libraryExerciseId: ex.libraryExerciseId,
+            }
+          })
+          await createStrengthAssignment({
+            templateId: `ai_plan_${w.date}`,
+            coachId: user.uid,
+            athleteId,
+            date: w.date,
+            status: 'assigned',
+            templateSnapshot: {
+              name: w.title,
+              exercises,
+            },
+            completionReport: null,
+            coachFeedback: null,
+          })
+        } else {
+          // ランニング・休養は Workout として保存
+          await createPlannedWorkout({
+            athleteId,
+            coachId: user.uid,
+            date: w.date,
+            type: 'planned',
+            planned: {
+              title: w.title,
+              description: w.description,
+              workoutType: w.workoutType,
+              targetDistanceKm: w.targetDistanceKm,
+              targetDurationMin: w.targetDurationMin,
+              targetPaceMinPerKm: w.targetPaceMinPerKm,
+              targetHeartRateZone: null,
+              notes: '',
+              createdAt: Timestamp.now(),
+              createdBy: user.uid,
+            },
+            completed: null,
+            coachFeedback: null,
+          })
+        }
         count++
         setSavedCount(count)
       }
-      // 完了後2秒待ってからリダイレクト
       await new Promise((r) => setTimeout(r, 1500))
       router.replace(`/calendar/${athleteId}`)
     } catch (e: any) {
@@ -170,8 +227,15 @@ export default function AIPlanPage() {
             <h2 className="text-base font-semibold text-white">AIでランニングプラン作成</h2>
           </div>
           <p className="text-sm text-slate-400 mb-4">
-            選手の状態とレース目標を入力するとAIが日毎のメニューを生成します
+            選手のCTL・プロフィール・Wellnessデータは自動取得されます。種目ライブラリも自動で反映されます。
           </p>
+
+          {!athlete && (
+            <div className="mb-3 flex items-center gap-2 rounded-lg bg-amber-900/30 border border-amber-700 px-3 py-2 text-sm text-amber-300">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              選手キャッシュの読み込み中...
+            </div>
+          )}
 
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
@@ -220,7 +284,10 @@ export default function AIPlanPage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-300">現在のフィットネス・走力</label>
+              <label className="mb-1 block text-xs font-medium text-slate-300">
+                現在のフィットネス・走力
+                <span className="ml-1 text-slate-500">（CTLが自動入力されます）</span>
+              </label>
               <textarea
                 value={currentFitness}
                 onChange={(e) => setCurrentFitness(e.target.value)}
@@ -243,7 +310,7 @@ export default function AIPlanPage() {
 
             <button
               onClick={handleGenerate}
-              disabled={generating || !currentFitness}
+              disabled={generating || !currentFitness || !athlete}
               className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-purple-500 disabled:opacity-60"
             >
               <Sparkles className={`h-4 w-4 ${generating ? 'animate-spin' : ''}`} />
@@ -288,50 +355,78 @@ export default function AIPlanPage() {
             </div>
 
             <ul className="space-y-2">
-              {plan.map((w, idx) => (
-                <li key={idx}>
-                  <button
-                    onClick={() => toggle(idx)}
-                    className={`w-full rounded-xl border p-4 text-left transition-colors ${
-                      selected.has(idx)
-                        ? 'border-purple-600 bg-purple-950/20'
-                        : 'border-slate-800 bg-slate-900 hover:border-slate-700'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <span
-                        className={`mt-0.5 flex h-5 w-5 items-center justify-center rounded border ${
-                          selected.has(idx)
-                            ? 'border-purple-500 bg-purple-600 text-white'
-                            : 'border-slate-600 bg-slate-950'
-                        }`}
-                      >
-                        {selected.has(idx) && <Check className="h-3 w-3" />}
-                      </span>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-semibold text-white">
-                            {w.date} ・ {w.title}
-                          </h4>
-                          <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] text-slate-300">
-                            {WORKOUT_TYPE_LABELS[w.workoutType]}
-                          </span>
-                        </div>
-                        <p className="mt-1 text-xs text-slate-400">
-                          {w.targetDistanceKm && `距離: ${w.targetDistanceKm}km `}
-                          {w.targetDurationMin && `時間: ${w.targetDurationMin}分 `}
-                          {w.targetPaceMinPerKm && `ペース: ${w.targetPaceMinPerKm}/km`}
-                        </p>
-                        {w.description && (
-                          <p className="mt-2 text-xs text-slate-300 whitespace-pre-wrap">
-                            {w.description}
+              {plan.map((w, idx) => {
+                const isStrength = w.workoutType === 'cross_training' && w.strengthExercises && w.strengthExercises.length > 0
+                return (
+                  <li key={idx}>
+                    <button
+                      onClick={() => toggle(idx)}
+                      className={`w-full rounded-xl border p-4 text-left transition-colors ${
+                        selected.has(idx)
+                          ? 'border-purple-600 bg-purple-950/20'
+                          : 'border-slate-800 bg-slate-900 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <span
+                          className={`mt-0.5 flex h-5 w-5 items-center justify-center rounded border ${
+                            selected.has(idx)
+                              ? 'border-purple-500 bg-purple-600 text-white'
+                              : 'border-slate-600 bg-slate-950'
+                          }`}
+                        >
+                          {selected.has(idx) && <Check className="h-3 w-3" />}
+                        </span>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-semibold text-white">
+                              {w.date} ・ {w.title}
+                            </h4>
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] ${
+                              isStrength
+                                ? 'bg-green-800/50 text-green-300'
+                                : w.workoutType === 'rest'
+                                  ? 'bg-blue-800/50 text-blue-300'
+                                  : 'bg-yellow-800/50 text-yellow-300'
+                            }`}>
+                              {isStrength ? '💪 筋トレ' : WORKOUT_TYPE_LABELS[w.workoutType]}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs text-slate-400">
+                            {w.targetDistanceKm && `距離: ${w.targetDistanceKm}km `}
+                            {w.targetDurationMin && `時間: ${w.targetDurationMin}分 `}
+                            {w.targetPaceMinPerKm && `ペース: ${w.targetPaceMinPerKm}/km`}
                           </p>
-                        )}
+                          {w.description && (
+                            <p className="mt-2 text-xs text-slate-300 whitespace-pre-wrap">
+                              {w.description}
+                            </p>
+                          )}
+                          {isStrength && w.strengthExercises && (
+                            <div className="mt-2 space-y-1">
+                              <p className="text-[10px] font-medium text-green-400 flex items-center gap-1">
+                                <Dumbbell className="h-3 w-3" />
+                                種目ライブラリから選択:
+                              </p>
+                              {w.strengthExercises.map((ex, ei) => (
+                                <div key={ei} className="flex items-center gap-2 text-[10px] text-slate-300">
+                                  <span className="text-green-400">•</span>
+                                  <span className="font-medium">{ex.name}</span>
+                                  <span className="text-slate-500">
+                                    {ex.sets}セット×
+                                    {ex.reps ? `${ex.reps}回` : `${ex.durationSec}秒`}
+                                    {` 休${ex.restSec}秒`}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                </li>
-              ))}
+                    </button>
+                  </li>
+                )
+              })}
             </ul>
 
             {saving && savedCount > 0 && (

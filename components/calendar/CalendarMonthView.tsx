@@ -30,6 +30,7 @@ interface Props {
 }
 
 export function CalendarMonthView({ athleteId, isCoachView = false, refreshKey = 0 }: Props) {
+  const { user } = useAuth()
   const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth() + 1) // 1-12
@@ -52,9 +53,10 @@ export function CalendarMonthView({ athleteId, isCoachView = false, refreshKey =
     let cancelled = false
     const load = async () => {
       setLoading(true)
+      const coachId = isCoachView ? user?.uid : undefined
       const [w, s] = await Promise.all([
-        getWorkoutsByMonth(athleteId, year, month),
-        getStrengthAssignmentsByMonth(athleteId, year, month),
+        getWorkoutsByMonth(athleteId, year, month, coachId),
+        getStrengthAssignmentsByMonth(athleteId, year, month, coachId),
       ])
       if (!cancelled) {
         setWorkouts(w)
@@ -66,7 +68,7 @@ export function CalendarMonthView({ athleteId, isCoachView = false, refreshKey =
     return () => {
       cancelled = true
     }
-  }, [athleteId, year, month, refreshKey, internalRefresh])
+  }, [athleteId, year, month, refreshKey, internalRefresh, isCoachView, user?.uid])
 
   /**
    * ドロップ処理
@@ -290,6 +292,8 @@ export function CalendarMonthView({ athleteId, isCoachView = false, refreshKey =
                   <div className="space-y-1">
                     {ws.map((w) => {
                       const achievement = calculateAchievement(w)
+                      const wType = w.planned?.workoutType ?? w.completed?.workoutType
+                      const isRest = wType === 'rest'
                       return (
                         <Link
                           key={w.id}
@@ -306,7 +310,9 @@ export function CalendarMonthView({ athleteId, isCoachView = false, refreshKey =
                             'block truncate rounded px-1.5 py-0.5 text-[10px] font-medium',
                             w.completed
                               ? 'bg-emerald-600/30 text-emerald-300'
-                              : 'bg-blue-600/30 text-blue-300',
+                              : isRest
+                                ? 'bg-blue-600/30 text-blue-300'
+                                : 'bg-yellow-600/30 text-yellow-300',
                             isCoachView && w.planned && 'cursor-grab active:cursor-grabbing'
                           )}
                         >
@@ -315,7 +321,7 @@ export function CalendarMonthView({ athleteId, isCoachView = false, refreshKey =
                               {achievement.percent}%
                             </span>
                           )}
-                          🏃 {w.planned?.title ?? w.completed?.title ?? 'ラン'}
+                          {isRest ? '😴' : '🏃'} {w.planned?.title ?? w.completed?.title ?? 'ラン'}
                         </Link>
                       )
                     })}
@@ -335,7 +341,7 @@ export function CalendarMonthView({ athleteId, isCoachView = false, refreshKey =
                           'block truncate rounded px-1.5 py-0.5 text-[10px] font-medium',
                           s.status === 'completed'
                             ? 'bg-emerald-600/30 text-emerald-300'
-                            : 'bg-purple-600/30 text-purple-300',
+                            : 'bg-green-600/30 text-green-300',
                           isCoachView && 'cursor-grab active:cursor-grabbing'
                         )}
                       >

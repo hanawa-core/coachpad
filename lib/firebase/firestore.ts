@@ -45,6 +45,14 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
 
 export async function updateUserProfile(uid: string, data: Partial<UserProfile>) {
   await updateDoc(doc(db, 'users', uid), { ...data })
+  // 選手キャッシュ（コーチ向け）に displayName を同期
+  if (data.displayName) {
+    const athleteRef = doc(db, 'athletes', uid)
+    const athleteSnap = await getDoc(athleteRef)
+    if (athleteSnap.exists()) {
+      await updateDoc(athleteRef, { displayName: data.displayName })
+    }
+  }
 }
 
 // ============================================================
@@ -112,11 +120,16 @@ export async function setAthletePlan(
 export async function getWorkoutsByMonth(
   athleteId: string,
   year: number,
-  month: number // 1-12
+  month: number, // 1-12
+  coachId?: string
 ): Promise<Workout[]> {
   const prefix = `${year}-${String(month).padStart(2, '0')}-`
-  // 複合インデックスを避けるため athleteId のみで取得し、日付はクライアント側で絞り込み
-  const q = query(collection(db, 'workouts'), where('athleteId', '==', athleteId))
+  // コーチ閲覧時は coachId フィルタを追加しないとFirestoreルールでクエリが拒否される
+  const constraints =
+    coachId && coachId !== athleteId
+      ? [where('athleteId', '==', athleteId), where('coachId', '==', coachId)]
+      : [where('athleteId', '==', athleteId)]
+  const q = query(collection(db, 'workouts'), ...constraints)
   const snap = await getDocs(q)
   return snap.docs
     .map((d) => ({ ...(d.data() as Workout), id: d.id }))
@@ -466,13 +479,15 @@ export async function duplicateStrengthTemplate(id: string): Promise<string | nu
 export async function getStrengthAssignmentsByMonth(
   athleteId: string,
   year: number,
-  month: number
+  month: number,
+  coachId?: string
 ): Promise<StrengthAssignment[]> {
   const prefix = `${year}-${String(month).padStart(2, '0')}-`
-  const q = query(
-    collection(db, 'strengthAssignments'),
-    where('athleteId', '==', athleteId)
-  )
+  const constraints =
+    coachId && coachId !== athleteId
+      ? [where('athleteId', '==', athleteId), where('coachId', '==', coachId)]
+      : [where('athleteId', '==', athleteId)]
+  const q = query(collection(db, 'strengthAssignments'), ...constraints)
   const snap = await getDocs(q)
   return snap.docs
     .map((d) => ({ ...(d.data() as StrengthAssignment), id: d.id }))
@@ -613,16 +628,14 @@ export async function saveWellnessEntry(
 ) {
   const id = wellnessDocId(athleteId, date)
   const ref = doc(db, 'wellnessEntries', id)
-  const existing = await getDoc(ref)
+  // getDoc を使わず setDoc+merge で保存（新規ドキュメントの getDoc が Firestore ルールで拒否されるため）
   await setDoc(
     ref,
     {
       athleteId,
       date,
       ...data,
-      ...(existing.exists()
-        ? { updatedAt: serverTimestamp() }
-        : { createdAt: serverTimestamp(), updatedAt: serverTimestamp() }),
+      updatedAt: serverTimestamp(),
     },
     { merge: true }
   )
