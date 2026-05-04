@@ -5,7 +5,7 @@ import { useAuth } from '@/components/providers/AuthProvider'
 import { TopBar } from '@/components/layout/TopBar'
 import { StravaCard } from '@/components/strava/StravaCard'
 import Link from 'next/link'
-import { Users, Sparkles, User as UserIcon, Trophy, FlaskConical } from 'lucide-react'
+import { Users, Sparkles, User as UserIcon, Trophy, FlaskConical, BookOpen } from 'lucide-react'
 
 export default function SettingsPage() {
   const { profile } = useAuth()
@@ -124,6 +124,23 @@ export default function SettingsPage() {
             <StravaCard />
           </Suspense>
         )}
+
+        {/* マニュアル */}
+        <Link
+          href="/manual"
+          className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900 p-6 hover:bg-slate-900/80 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-slate-800 p-2.5 text-slate-300">
+              <BookOpen className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-white">使い方マニュアル</h3>
+              <p className="text-xs text-slate-500">全機能の説明・よくある質問</p>
+            </div>
+          </div>
+          <span className="text-slate-500">→</span>
+        </Link>
 
         {/* 法務リンク */}
         <div className="pt-6 flex items-center justify-center gap-3 text-xs text-slate-500">
