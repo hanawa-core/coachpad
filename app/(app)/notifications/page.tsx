@@ -39,6 +39,12 @@ export default function NotificationsPage() {
       window.location.href = `/strength/${n.relatedEntityId}`
     } else if (n.relatedEntityType === 'annotation') {
       window.location.href = `/motion/${n.relatedEntityId}`
+    } else if (n.relatedEntityType === 'chat') {
+      // threadId = `${coachId}_${athleteId}` から相手のIDを抽出
+      const otherId = n.relatedEntityId.split('_').find((id) => id !== user?.uid)
+      if (otherId) window.location.href = `/chat/${otherId}`
+    } else if (n.relatedEntityType === 'wellness') {
+      window.location.href = `/wellness`
     }
   }
 

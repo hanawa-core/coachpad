@@ -168,6 +168,22 @@ export async function logCompletedWorkout(
     type: 'both',
     updatedAt: serverTimestamp(),
   })
+  // コーチに通知（自分が選手兼コーチの場合は通知しない）
+  const snap = await getDoc(doc(db, 'workouts', workoutId))
+  if (snap.exists()) {
+    const w = snap.data() as Workout
+    if (w.coachId && w.coachId !== w.athleteId) {
+      await createNotification({
+        recipientId: w.coachId,
+        senderId: w.athleteId,
+        type: 'workout_logged',
+        relatedEntityType: 'workout',
+        relatedEntityId: workoutId,
+        title: '🏃 選手がランニングを完了しました',
+        body: `${w.date}: ${completed?.title ?? w.planned?.title ?? ''}`,
+      })
+    }
+  }
 }
 
 export async function createCompletedWorkout(data: Omit<Workout, 'id' | 'createdAt' | 'updatedAt'>) {
@@ -177,6 +193,18 @@ export async function createCompletedWorkout(data: Omit<Workout, 'id' | 'created
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   })
+  // コーチに通知
+  if (data.coachId && data.coachId !== data.athleteId) {
+    await createNotification({
+      recipientId: data.coachId,
+      senderId: data.athleteId,
+      type: 'workout_logged',
+      relatedEntityType: 'workout',
+      relatedEntityId: ref.id,
+      title: '🏃 選手がランニングを記録しました',
+      body: `${data.date}: ${data.completed?.title ?? ''}`,
+    })
+  }
   return ref.id
 }
 
@@ -633,6 +661,21 @@ export async function saveWellnessEntry(
     },
     { merge: true }
   )
+  // コーチに通知
+  const userSnap = await getDoc(doc(db, 'users', athleteId))
+  const coachId = userSnap.exists() ? (userSnap.data() as UserProfile).coachId : null
+  if (coachId && coachId !== athleteId) {
+    const athleteName = (userSnap.data() as UserProfile).displayName ?? '選手'
+    await createNotification({
+      recipientId: coachId,
+      senderId: athleteId,
+      type: 'wellness_logged',
+      relatedEntityType: 'wellness',
+      relatedEntityId: id,
+      title: '📊 ウェルネス登録がありました',
+      body: `${athleteName} - ${date}`,
+    })
+  }
   return id
 }
 
@@ -907,6 +950,25 @@ export async function sendChatMessage(
     },
     updatedAt: serverTimestamp(),
   })
+
+  // 相手に通知（双方向）
+  const threadSnap = await getDoc(doc(db, 'chats', threadId))
+  if (threadSnap.exists()) {
+    const t = threadSnap.data() as ChatThread
+    const recipientId = t.participants.find((p) => p !== senderId)
+    if (recipientId) {
+      const senderName = senderId === t.coachId ? t.coachName : t.athleteName
+      await createNotification({
+        recipientId,
+        senderId,
+        type: 'chat_message',
+        relatedEntityType: 'chat',
+        relatedEntityId: threadId,
+        title: `💬 ${senderName} からメッセージ`,
+        body: data.type === 'image' ? '📷 画像' : data.text.slice(0, 80),
+      })
+    }
+  }
 }
 
 /**

@@ -647,13 +647,15 @@ export type NotificationType =
   | 'workout_assigned'
   | 'strength_assigned'
   | 'workout_logged'
+  | 'chat_message'
+  | 'wellness_logged'
 
 export interface Notification {
   id: string
   recipientId: string
   senderId: string
   type: NotificationType
-  relatedEntityType: 'workout' | 'strengthAssignment' | 'annotation'
+  relatedEntityType: 'workout' | 'strengthAssignment' | 'annotation' | 'chat' | 'wellness'
   relatedEntityId: string
   title: string
   body: string
