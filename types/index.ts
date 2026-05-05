@@ -89,6 +89,8 @@ export interface UserProfile {
   country?: string | null
   /** 自己紹介・備考 */
   bio?: string | null
+  /** FCMプッシュ通知トークン */
+  fcmToken?: string | null
 
   // ===== ランニング設定（選手主に活用） =====
   /** 閾値心拍 (LTHR) */

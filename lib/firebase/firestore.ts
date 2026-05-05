@@ -1019,4 +1019,9 @@ export async function createNotification(
     isRead: false,
     createdAt: serverTimestamp(),
   })
+  fetch('/api/notifications/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ recipientId: data.recipientId, title: data.title, body: data.body }),
+  }).catch(() => {})
 }
