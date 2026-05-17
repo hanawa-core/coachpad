@@ -114,17 +114,17 @@ export default function ExerciseLibraryPage() {
           <p className="text-sm text-slate-400">
             登録済み種目: <span className="font-semibold text-white">{items.length}</span> 件
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Link
               href="/strength/exercises/ai"
-              className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-500"
+              className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-3 sm:px-4 py-2 text-sm font-medium text-white hover:bg-purple-500"
             >
               <Sparkles className="h-4 w-4" />
               AIで一括追加
             </Link>
             <Link
               href="/strength/exercises/new"
-              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 sm:px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
             >
               <Plus className="h-4 w-4" />
               手動で追加
@@ -134,8 +134,8 @@ export default function ExerciseLibraryPage() {
 
         {/* 旧カテゴリ再分類バナー */}
         {!loading && legacyCount > 0 && (
-          <div className="flex items-center justify-between rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3">
-            <div>
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-amber-300">
                 旧カテゴリの種目が {legacyCount} 件あります
               </p>
@@ -146,7 +146,7 @@ export default function ExerciseLibraryPage() {
             <button
               onClick={handleReclassify}
               disabled={reclassifying}
-              className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white hover:bg-amber-400 disabled:opacity-60 shrink-0 ml-4"
+              className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-3 sm:px-4 py-2 text-sm font-medium text-white hover:bg-amber-400 disabled:opacity-60 shrink-0"
             >
               <RefreshCw className={`h-4 w-4 ${reclassifying ? 'animate-spin' : ''}`} />
               {reclassifying ? '分類中...' : 'AIで再分類'}
@@ -195,7 +195,7 @@ export default function ExerciseLibraryPage() {
                 if (allCats.length === 0) return null
                 return (
                   <div key={group.label} className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-xs text-slate-600 font-medium w-16 shrink-0">{group.label}</span>
+                    <span className="text-xs text-slate-600 font-medium w-full sm:w-16 sm:shrink-0">{group.label}</span>
                     {allCats.map((cat) => {
                       const count = countByCategory(cat)
                       return (
@@ -224,16 +224,16 @@ export default function ExerciseLibraryPage() {
             {filtered.length === 0 ? (
               <p className="text-sm text-slate-500 py-4">このカテゴリの種目はまだありません</p>
             ) : (
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
                 {filtered.map((ex) => (
                   <div
                     key={ex.id}
-                    className="rounded-xl border border-slate-800 bg-slate-900 p-4"
+                    className="rounded-xl border border-slate-800 bg-slate-900 p-4 overflow-hidden min-w-0"
                   >
-                    <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start justify-between gap-2 min-w-0">
                       <div className="flex-1 min-w-0">
                         <h3 className="text-base font-semibold text-white truncate">{ex.name}</h3>
-                        <p className="mt-0.5 text-xs text-slate-500">
+                        <p className="mt-0.5 text-xs text-slate-500 break-words">
                           {STRENGTH_CATEGORY_LABELS[ex.category] ?? ex.category}
                           {ex.targetMuscles.length > 0 && (
                             <span className="text-slate-400"> · {ex.targetMuscles.join('・')}</span>
@@ -266,7 +266,7 @@ export default function ExerciseLibraryPage() {
                       </div>
                     </div>
                     {ex.instructions && (
-                      <p className="mt-2 text-xs text-slate-300 line-clamp-3 whitespace-pre-wrap">
+                      <p className="mt-2 text-xs text-slate-300 line-clamp-3 whitespace-pre-wrap break-words">
                         {ex.instructions}
                       </p>
                     )}
