@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react'
 import { Activity } from 'lucide-react'
 import { useAuth } from '@/components/providers/AuthProvider'
-import { doc, getDoc, setDoc, query, where, getDocs, collection, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase/config'
+import { initUserProfile } from '@/lib/firebase/auth'
 
 export default function OnboardingPage() {
   const { user } = useAuth()
@@ -13,73 +14,23 @@ export default function OnboardingPage() {
   const [error, setError] = useState('')
   const [autoChecking, setAutoChecking] = useState(true)
 
-  // 招待経由のユーザーを自動検出して即座にプロフィール作成
+  // 既に users/{uid} が存在すればダッシュボードへリダイレクト
+  // ※ メール一致での自動 athlete マッチングは廃止（招待リンク経由のみ）
   useEffect(() => {
     if (!user) return
     let cancelled = false
-
-    const autoSetup = async () => {
+    ;(async () => {
       try {
-        // 0. 既に users/{uid} がある場合は即ダッシュボードへ（上書きしない）
-        const userSnap = await getDoc(doc(db, 'users', user.uid))
-        if (userSnap.exists()) {
-          if (!cancelled) window.location.replace('/dashboard')
+        const snap = await getDoc(doc(db, 'users', user.uid))
+        if (!cancelled && snap.exists()) {
+          window.location.replace('/dashboard')
           return
         }
-
-        // 1. 既に athletes/{uid} ドキュメントがあれば（招待登録済み）
-        const athleteSnap = await getDoc(doc(db, 'athletes', user.uid))
-        if (athleteSnap.exists()) {
-          const data = athleteSnap.data()
-          await setDoc(doc(db, 'users', user.uid), {
-            uid: user.uid,
-            email: user.email ?? '',
-            displayName: data.displayName ?? user.displayName ?? user.email?.split('@')[0] ?? 'ユーザー',
-            role: 'athlete',
-            avatarUrl: null,
-            coachId: data.coachId ?? null,
-            timezone: 'Asia/Tokyo',
-            targetRaces: [],
-            createdAt: serverTimestamp(),
-          })
-          if (!cancelled) window.location.replace('/dashboard')
-          return
-        }
-
-        // 2. メールに紐づく pending 招待があれば athlete として登録
-        if (user.email) {
-          const inviteQ = query(
-            collection(db, 'invites'),
-            where('email', '==', user.email),
-            where('status', '==', 'pending')
-          )
-          const inviteSnap = await getDocs(inviteQ)
-          if (!inviteSnap.empty) {
-            const invite = inviteSnap.docs[0].data()
-            await setDoc(doc(db, 'users', user.uid), {
-              uid: user.uid,
-              email: user.email,
-              displayName: user.displayName ?? user.email.split('@')[0],
-              role: 'athlete',
-              avatarUrl: null,
-              coachId: invite.coachId,
-              timezone: 'Asia/Tokyo',
-              targetRaces: [],
-              createdAt: serverTimestamp(),
-            })
-            if (!cancelled) window.location.replace('/dashboard')
-            return
-          }
-        }
-
-        // 招待が見つからない → コーチとして手動登録フォーム表示
         if (!cancelled) setAutoChecking(false)
-      } catch (e) {
+      } catch {
         if (!cancelled) setAutoChecking(false)
       }
-    }
-
-    autoSetup()
+    })()
     return () => { cancelled = true }
   }, [user])
 
@@ -89,17 +40,8 @@ export default function OnboardingPage() {
     setSaving(true)
     setError('')
     try {
-      await setDoc(doc(db, 'users', user.uid), {
-        uid: user.uid,
-        email: user.email ?? '',
-        displayName: displayName.trim(),
-        role: 'coach',
-        avatarUrl: null,
-        coachId: null,
-        timezone: 'Asia/Tokyo',
-        targetRaces: [],
-        createdAt: serverTimestamp(),
-      })
+      // サーバ API でコーチとして初期化（role はサーバ側で 'coach' 固定）
+      await initUserProfile({ displayName: displayName.trim() })
       window.location.replace('/dashboard')
     } catch (e: any) {
       setError(e.message ?? 'エラーが発生しました')
@@ -107,7 +49,6 @@ export default function OnboardingPage() {
     }
   }
 
-  // 招待検出中のローディング画面
   if (autoChecking) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950">

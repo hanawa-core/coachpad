@@ -5,9 +5,9 @@ import {
   updateProfile,
   User,
 } from 'firebase/auth'
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from './config'
-import type { UserProfile, Role } from '@/types'
+import type { UserProfile } from '@/types'
 
 // ログイン
 export async function signIn(email: string, password: string) {
@@ -19,32 +19,47 @@ export async function logOut() {
   return signOut(auth)
 }
 
-// 新規登録（招待トークン経由）
+/**
+ * 招待リンク経由の新規登録：Firebase Auth にアカウントを作成するのみ。
+ * Firestore への users/{uid} 書き込みは /api/users/init（サーバ）に集約済み。
+ * 呼び出し側は credential 取得後に initUserProfile() を必ず呼ぶこと。
+ */
 export async function registerWithInvite(
   email: string,
   password: string,
-  displayName: string,
-  role: Role,
-  coachId: string | null
+  displayName: string
 ) {
   const credential = await createUserWithEmailAndPassword(auth, email, password)
-  const user = credential.user
-
-  await updateProfile(user, { displayName })
-
-  await setDoc(doc(db, 'users', user.uid), {
-    uid: user.uid,
-    email,
-    displayName,
-    role,
-    avatarUrl: null,
-    coachId,
-    timezone: 'Asia/Tokyo',
-    targetRaces: [],
-    createdAt: serverTimestamp(),
-  })
-
+  await updateProfile(credential.user, { displayName })
   return credential
+}
+
+/**
+ * サーバ API 経由で users/{uid} を初期化。
+ * - inviteToken 指定: athletes として登録（招待検証＋acceptInvite を atomic に実施）
+ * - inviteToken 無し: coach として登録
+ * 既に users/{uid} が存在する場合は冪等に成功扱い。
+ */
+export async function initUserProfile(args: {
+  displayName: string
+  inviteToken?: string
+}): Promise<{ ok: true; existed: boolean }> {
+  const user = auth.currentUser
+  if (!user) throw new Error('not-signed-in')
+  const idToken = await user.getIdToken()
+  const res = await fetch('/api/users/init', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${idToken}`,
+    },
+    body: JSON.stringify(args),
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data?.error ?? `init failed (${res.status})`)
+  }
+  return res.json()
 }
 
 // Firestoreからユーザープロフィール取得

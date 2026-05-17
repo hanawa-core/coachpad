@@ -19,10 +19,19 @@ service cloud.firestore {
     }
 
     // ---------- users ----------
-    // 自分のプロフィール: 作成・更新可。全認証ユーザーが閲覧可（コーチ↔選手の名前表示）
+    // 自分のプロフィール: 全認証ユーザーが閲覧可（コーチ↔選手の名前表示）
+    // create: サーバ API (/api/users/init) のみ。クライアント直書き禁止。
+    // update: 本人のみ可だが role / coachId / uid / email / plan / createdAt は不変。
     match /users/{uid} {
       allow read: if isSignedIn();
-      allow create, update: if isOwner(uid);
+      allow create: if false;
+      allow update: if isOwner(uid)
+                    && request.resource.data.uid == resource.data.uid
+                    && request.resource.data.role == resource.data.role
+                    && request.resource.data.coachId == resource.data.coachId
+                    && request.resource.data.email == resource.data.email
+                    && request.resource.data.get('plan', null) == resource.data.get('plan', null)
+                    && request.resource.data.get('createdAt', null) == resource.data.get('createdAt', null);
       allow delete: if false;
 
       // Strava 連携（本人のみ）

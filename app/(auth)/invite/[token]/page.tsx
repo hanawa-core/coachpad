@@ -3,10 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Activity, AlertTriangle } from 'lucide-react'
-import { getInviteByToken, acceptInvite } from '@/lib/firebase/firestore'
-import { registerWithInvite } from '@/lib/firebase/auth'
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { getInviteByToken } from '@/lib/firebase/firestore'
+import { registerWithInvite, initUserProfile } from '@/lib/firebase/auth'
 import type { Invite } from '@/types'
 
 export default function InvitePage() {
@@ -47,25 +45,10 @@ export default function InvitePage() {
     setError('')
     setLoading(true)
     try {
-      const credential = await registerWithInvite(email, password, name, 'athlete', invite.coachId)
-      const uid = credential.user.uid
-
-      // athletes コレクションにキャッシュ作成
-      await setDoc(doc(db, 'athletes', uid), {
-        userId: uid,
-        coachId: invite.coachId,
-        displayName: name,
-        email,
-        avatarUrl: null,
-        joinedAt: serverTimestamp(),
-        isActive: true,
-        latestMetrics: null,
-        lastWorkoutLoggedAt: null,
-        lastStrengthLoggedAt: null,
-        weeklyStats: null,
-      })
-
-      await acceptInvite(invite.id, uid)
+      // 1. Firebase Auth アカウント作成（Firestore 書き込みなし）
+      await registerWithInvite(email, password, name)
+      // 2. サーバ API で users/{uid} + athletes/{uid} + invite accepted を atomic 初期化
+      await initUserProfile({ displayName: name, inviteToken: token })
       router.replace('/dashboard')
     } catch (err: any) {
       setError(err.message ?? '登録に失敗しました')
