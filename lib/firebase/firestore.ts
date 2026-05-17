@@ -614,6 +614,25 @@ export async function deleteExerciseLibraryItem(id: string) {
   await deleteDoc(doc(db, 'exerciseLibrary', id))
 }
 
+/**
+ * 種目ライブラリの項目を複製
+ * 名前に「(コピー)」を付与した新規ドキュメントを作成
+ */
+export async function duplicateExerciseLibraryItem(id: string): Promise<string | null> {
+  const original = await getExerciseLibraryItem(id)
+  if (!original) return null
+
+  const newRef = doc(collection(db, 'exerciseLibrary'))
+  const { id: _omitId, createdAt: _omitCreated, updatedAt: _omitUpdated, ...rest } = original
+  await setDoc(newRef, {
+    ...rest,
+    name: `${original.name} (コピー)`,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  })
+  return newRef.id
+}
+
 // ============================================================
 // コーチAIプロフィール
 // ============================================================

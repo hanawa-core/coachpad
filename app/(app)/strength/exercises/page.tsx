@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Plus, Library, Sparkles, Trash2, Pencil, RefreshCw } from 'lucide-react'
+import { Plus, Library, Sparkles, Trash2, Pencil, RefreshCw, Copy } from 'lucide-react'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { TopBar } from '@/components/layout/TopBar'
 import { useRouter } from 'next/navigation'
 import {
   getExerciseLibrary,
   deleteExerciseLibraryItem,
+  duplicateExerciseLibraryItem,
 } from '@/lib/firebase/firestore'
 import { YouTubeEmbed } from '@/components/strength/YouTubeEmbed'
 import type { ExerciseLibraryItem, StrengthCategory } from '@/types'
@@ -24,6 +25,7 @@ export default function ExerciseLibraryPage() {
   const [loading, setLoading] = useState(true)
   const [activeFilter, setActiveFilter] = useState<Filter>(ALL)
   const [reclassifying, setReclassifying] = useState(false)
+  const [duplicating, setDuplicating] = useState<string | null>(null)
 
   const reload = async () => {
     if (!user) return
@@ -52,6 +54,18 @@ export default function ExerciseLibraryPage() {
     if (!confirm('この種目を削除しますか？')) return
     await deleteExerciseLibraryItem(id)
     reload()
+  }
+
+  const handleDuplicate = async (id: string) => {
+    setDuplicating(id)
+    try {
+      const newId = await duplicateExerciseLibraryItem(id)
+      if (newId) {
+        router.push(`/strength/exercises/${newId}/edit`)
+      }
+    } finally {
+      setDuplicating(null)
+    }
   }
 
   // 旧カテゴリ件数
@@ -228,14 +242,24 @@ export default function ExerciseLibraryPage() {
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
                         <button
+                          onClick={() => handleDuplicate(ex.id)}
+                          disabled={duplicating === ex.id}
+                          className="rounded p-1 text-slate-500 hover:bg-slate-700 hover:text-white disabled:opacity-50"
+                          title="複製して編集"
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                        </button>
+                        <button
                           onClick={() => router.push(`/strength/exercises/${ex.id}/edit`)}
                           className="rounded p-1 text-slate-500 hover:bg-slate-700 hover:text-white"
+                          title="編集"
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
                         <button
                           onClick={() => handleDelete(ex.id)}
                           className="rounded p-1 text-slate-500 hover:bg-red-900/30 hover:text-red-400"
+                          title="削除"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>

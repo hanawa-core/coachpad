@@ -99,36 +99,57 @@ export async function syncActivity(userId: string, stravaActivityId: number): Pr
   const userData = userSnap.data()
   const coachId = userData?.coachId ?? ''
 
-  const existingQuery = await db
+  // 1) 既に同じ Strava activity が同期済みなら、そのドキュメントを更新
+  const sameActivityQuery = await db
     .collection('workouts')
     .where('athleteId', '==', userId)
-    .where('date', '==', date)
+    .where('stravaActivityId', '==', stravaActivityId)
     .limit(1)
     .get()
 
-  if (!existingQuery.empty) {
-    // 既存にcompletedをマージ
-    const doc = existingQuery.docs[0]
+  if (!sameActivityQuery.empty) {
+    const doc = sameActivityQuery.docs[0]
     await doc.ref.update({
       completed,
-      type: 'both',
       updatedAt: FieldValue.serverTimestamp(),
-      stravaActivityId,
     })
   } else {
-    // 新規ワークアウト作成（plannedなし）
-    await db.collection('workouts').add({
-      athleteId: userId,
-      coachId,
-      date,
-      type: 'completed',
-      planned: null,
-      completed,
-      coachFeedback: null,
-      stravaActivityId,
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
+    // 2) 同日の planned ワークアウト（まだ完了していない・Strava未紐付け）があれば、それにマージ
+    //    複数 Strava activity が同日にある場合の上書きを防ぐため、stravaActivityIdを持たないものだけマージ対象
+    const sameDateQuery = await db
+      .collection('workouts')
+      .where('athleteId', '==', userId)
+      .where('date', '==', date)
+      .get()
+
+    const mergeable = sameDateQuery.docs.find((d) => {
+      const data = d.data()
+      // Strava 未紐付け かつ completed が未設定（planned のみ）
+      return !data.stravaActivityId && !data.completed
     })
+
+    if (mergeable) {
+      await mergeable.ref.update({
+        completed,
+        type: 'both',
+        updatedAt: FieldValue.serverTimestamp(),
+        stravaActivityId,
+      })
+    } else {
+      // 3) 新規ワークアウトとして追加（朝晩2回ラン等、同日に複数 activity がある場合もここで別ドキュメント化）
+      await db.collection('workouts').add({
+        athleteId: userId,
+        coachId,
+        date,
+        type: 'completed',
+        planned: null,
+        completed,
+        coachFeedback: null,
+        stravaActivityId,
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      })
+    }
   }
 
   // athletes キャッシュ更新（CTL/ATL/TSB も格納）

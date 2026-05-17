@@ -49,8 +49,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </>
       )}
 
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <main className="flex-1 overflow-y-auto">
+      <div className="flex flex-1 flex-col overflow-hidden min-w-0">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden">
           <MenuButtonContext.Provider value={{ openMenu: () => setMobileOpen(true) }}>
             {children}
           </MenuButtonContext.Provider>
