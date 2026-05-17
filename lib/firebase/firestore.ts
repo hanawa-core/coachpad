@@ -131,6 +131,22 @@ export async function getWorkoutsByMonth(
     .sort((a, b) => a.date.localeCompare(b.date))
 }
 
+/**
+ * 同一日付の全ワークアウトを取得（朝晩2回ラン等の合算用）
+ */
+export async function getWorkoutsByDate(
+  athleteId: string,
+  date: string
+): Promise<Workout[]> {
+  const q = query(
+    collection(db, 'workouts'),
+    where('athleteId', '==', athleteId),
+    where('date', '==', date)
+  )
+  const snap = await getDocs(q)
+  return snap.docs.map((d) => ({ ...(d.data() as Workout), id: d.id }))
+}
+
 export async function getWorkout(workoutId: string): Promise<Workout | null> {
   const snap = await getDoc(doc(db, 'workouts', workoutId))
   if (!snap.exists()) return null

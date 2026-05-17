@@ -7,8 +7,8 @@ import { ArrowLeft, MessageSquare, Target } from 'lucide-react'
 import { Timestamp } from 'firebase/firestore'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { TopBar } from '@/components/layout/TopBar'
-import { getWorkout, saveCoachFeedback } from '@/lib/firebase/firestore'
-import { calculateAchievement } from '@/lib/achievement'
+import { getWorkout, getWorkoutsByDate, saveCoachFeedback } from '@/lib/firebase/firestore'
+import { calculateAchievement, calculateDayAchievement } from '@/lib/achievement'
 import { ZoneAnalysis } from '@/components/workouts/ZoneAnalysis'
 import { WorkoutMapSection } from '@/components/workouts/WorkoutMapSection'
 import type { Workout } from '@/types'
@@ -19,6 +19,7 @@ export default function WorkoutDetailPage() {
   const id = params.workoutId as string
   const { user, profile } = useAuth()
   const [workout, setWorkout] = useState<Workout | null>(null)
+  const [sameDateWorkouts, setSameDateWorkouts] = useState<Workout[]>([])
   const [loading, setLoading] = useState(true)
 
   // コーチフィードバック編集
@@ -31,6 +32,11 @@ export default function WorkoutDetailPage() {
       const w = await getWorkout(id)
       setWorkout(w)
       setFeedback(w?.coachFeedback?.textComment ?? '')
+      // 同日のワークアウトもまとめて取得（朝晩2回ラン等の合算判定用）
+      if (w) {
+        const siblings = await getWorkoutsByDate(w.athleteId, w.date)
+        setSameDateWorkouts(siblings)
+      }
       setLoading(false)
     }
     load()
@@ -66,7 +72,12 @@ export default function WorkoutDetailPage() {
   }
 
   const isCoach = profile?.role === 'coach'
-  const achievement = calculateAchievement(workout)
+  // 同日合算の達成率を優先（朝晩2回ラン等）。1件のみなら従来の単発判定を使用。
+  const dayAchievement = sameDateWorkouts.length > 1
+    ? calculateDayAchievement(sameDateWorkouts)
+    : null
+  const singleAchievement = calculateAchievement(workout)
+  const achievement = dayAchievement ?? singleAchievement
 
   return (
     <>

@@ -11,7 +11,7 @@ import {
   moveWorkoutToDate,
   moveStrengthAssignmentToDate,
 } from '@/lib/firebase/firestore'
-import { calculateAchievement } from '@/lib/achievement'
+import { calculateAchievement, calculateDayAchievement } from '@/lib/achievement'
 import { getPhaseForDate } from '@/lib/race-phase'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { getUserProfile } from '@/lib/firebase/firestore'
@@ -446,49 +446,58 @@ function DayView(props: Pick<ViewProps, 'focalDate' | 'races' | 'todayStr' | 'wo
         </p>
       ) : (
         <div className="space-y-2">
-          {ws.map((w) => {
-            const achievement = calculateAchievement(w)
-            const wType = w.planned?.workoutType ?? w.completed?.workoutType
-            const isRest = wType === 'rest'
-            return (
-              <Link
-                key={w.id}
-                href={`/workouts/${w.id}`}
-                className={clsx(
-                  'flex items-start gap-3 rounded-lg border p-3 transition-colors',
-                  w.completed
-                    ? 'border-emerald-500/30 bg-emerald-600/10 hover:bg-emerald-600/20'
-                    : isRest
-                      ? 'border-blue-500/30 bg-blue-600/10 hover:bg-blue-600/20'
-                      : 'border-yellow-500/30 bg-yellow-600/10 hover:bg-yellow-600/20'
-                )}
-              >
-                <span className="text-2xl">{isRest ? '😴' : '🏃'}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold text-white truncate">
-                      {w.planned?.title ?? w.completed?.title ?? 'ラン'}
-                    </h3>
-                    {achievement && (
-                      <span className="text-xs font-bold text-emerald-300 shrink-0">
-                        {achievement.percent}%
-                      </span>
+          {(() => {
+            const dayAchievement = calculateDayAchievement(ws)
+            const plannedWorkoutId = ws.find((w) => w.planned)?.id
+            return ws.map((w) => {
+              const wType = w.planned?.workoutType ?? w.completed?.workoutType
+              const isRest = wType === 'rest'
+              const showAchievement = dayAchievement && w.id === plannedWorkoutId
+              return (
+                <Link
+                  key={w.id}
+                  href={`/workouts/${w.id}`}
+                  className={clsx(
+                    'flex items-start gap-3 rounded-lg border p-3 transition-colors',
+                    w.completed
+                      ? 'border-emerald-500/30 bg-emerald-600/10 hover:bg-emerald-600/20'
+                      : isRest
+                        ? 'border-blue-500/30 bg-blue-600/10 hover:bg-blue-600/20'
+                        : 'border-yellow-500/30 bg-yellow-600/10 hover:bg-yellow-600/20'
+                  )}
+                >
+                  <span className="text-2xl">{isRest ? '😴' : '🏃'}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-white truncate">
+                        {w.planned?.title ?? w.completed?.title ?? 'ラン'}
+                      </h3>
+                      {showAchievement && dayAchievement && (
+                        <span className={clsx('text-xs font-bold shrink-0', dayAchievement.colorClass.split(' ')[0])}>
+                          {dayAchievement.percent}% {dayAchievement.label}
+                        </span>
+                      )}
+                    </div>
+                    {w.completed?.distanceKm != null && (
+                      <p className="mt-0.5 text-xs text-slate-400">
+                        {w.completed.distanceKm}km
+                        {w.completed.durationMin != null && ` · ${w.completed.durationMin}分`}
+                        {w.completed.avgPaceMinPerKm && ` · ${w.completed.avgPaceMinPerKm}/km`}
+                      </p>
+                    )}
+                    {showAchievement && dayAchievement && dayAchievement.actual !== w.completed?.distanceKm && dayAchievement.actual !== w.completed?.durationMin && (
+                      <p className="mt-0.5 text-[10px] text-emerald-400">
+                        ★ 同日合計 {dayAchievement.actual}{dayAchievement.unit} / 計画 {dayAchievement.planned}{dayAchievement.unit}
+                      </p>
+                    )}
+                    {w.planned?.description && (
+                      <p className="mt-1 text-xs text-slate-400 line-clamp-2">{w.planned.description}</p>
                     )}
                   </div>
-                  {w.completed?.distanceKm != null && (
-                    <p className="mt-0.5 text-xs text-slate-400">
-                      {w.completed.distanceKm}km
-                      {w.completed.durationMin != null && ` · ${w.completed.durationMin}分`}
-                      {w.completed.avgPaceMinPerKm && ` · ${w.completed.avgPaceMinPerKm}/km`}
-                    </p>
-                  )}
-                  {w.planned?.description && (
-                    <p className="mt-1 text-xs text-slate-400 line-clamp-2">{w.planned.description}</p>
-                  )}
-                </div>
-              </Link>
-            )
-          })}
+                </Link>
+              )
+            })
+          })()}
           {ss.map((s) => (
             <Link
               key={s.id}
@@ -595,36 +604,43 @@ function DayCell({
             </div>
           )}
           <div className="space-y-1">
-            {ws.map((w) => {
-              const achievement = calculateAchievement(w)
-              const wType = w.planned?.workoutType ?? w.completed?.workoutType
-              const isRest = wType === 'rest'
-              return (
-                <Link
-                  key={w.id}
-                  href={`/workouts/${w.id}`}
-                  draggable={isCoachView && !!w.planned}
-                  onDragStart={(e) =>
-                    onDragStart(e, { type: 'workout', id: w.id, date: w.date })
-                  }
-                  className={clsx(
-                    'block truncate rounded px-1.5 py-0.5 font-medium',
-                    compact ? 'text-[10px]' : 'text-xs',
-                    w.completed
-                      ? 'bg-emerald-600/30 text-emerald-300'
-                      : isRest
-                        ? 'bg-blue-600/30 text-blue-300'
-                        : 'bg-yellow-600/30 text-yellow-300',
-                    isCoachView && w.planned && 'cursor-grab active:cursor-grabbing'
-                  )}
-                >
-                  {achievement && (
-                    <span className="inline-block mr-1 font-bold">{achievement.percent}%</span>
-                  )}
-                  {isRest ? '😴' : '🏃'} {w.planned?.title ?? w.completed?.title ?? 'ラン'}
-                </Link>
-              )
-            })}
+            {(() => {
+              // 同日に planned workout があれば、completed の合計で日次達成率を計算
+              // 朝晩2回ラン等を合算して計画と比較
+              const dayAchievement = calculateDayAchievement(ws)
+              const plannedWorkoutId = ws.find((w) => w.planned)?.id
+              return ws.map((w) => {
+                const wType = w.planned?.workoutType ?? w.completed?.workoutType
+                const isRest = wType === 'rest'
+                // 達成率は計画ありの 1 ドキュメントにのみ表示（同日合算）
+                const showAchievement = dayAchievement && w.id === plannedWorkoutId
+                return (
+                  <Link
+                    key={w.id}
+                    href={`/workouts/${w.id}`}
+                    draggable={isCoachView && !!w.planned}
+                    onDragStart={(e) =>
+                      onDragStart(e, { type: 'workout', id: w.id, date: w.date })
+                    }
+                    className={clsx(
+                      'block truncate rounded px-1.5 py-0.5 font-medium',
+                      compact ? 'text-[10px]' : 'text-xs',
+                      w.completed
+                        ? 'bg-emerald-600/30 text-emerald-300'
+                        : isRest
+                          ? 'bg-blue-600/30 text-blue-300'
+                          : 'bg-yellow-600/30 text-yellow-300',
+                      isCoachView && w.planned && 'cursor-grab active:cursor-grabbing'
+                    )}
+                  >
+                    {showAchievement && dayAchievement && (
+                      <span className="inline-block mr-1 font-bold">{dayAchievement.percent}%</span>
+                    )}
+                    {isRest ? '😴' : '🏃'} {w.planned?.title ?? w.completed?.title ?? 'ラン'}
+                  </Link>
+                )
+              })
+            })()}
             {ss.map((s) => (
               <Link
                 key={s.id}
