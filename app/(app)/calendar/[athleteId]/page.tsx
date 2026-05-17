@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Sparkles, Copy } from 'lucide-react'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { TopBar } from '@/components/layout/TopBar'
 import { CalendarMonthView } from '@/components/calendar/CalendarMonthView'
@@ -43,28 +42,26 @@ export default function AthleteCalendarPage() {
     <>
       <TopBar title={athlete ? `${athlete.displayName} のカレンダー` : 'カレンダー'} />
       <div className="p-4 sm:p-6 space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <Link
             href="/athletes"
-            className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white"
+            className="text-sm text-slate-400 hover:text-white whitespace-nowrap shrink-0"
           >
-            <ArrowLeft className="h-4 w-4" />
-            選手一覧
+            ← 選手一覧
           </Link>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setCopyOpen(true)}
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+              className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700 whitespace-nowrap"
             >
-              <Copy className="h-4 w-4" />
               週コピー
             </button>
             <Link
               href={`/calendar/${athleteId}/ai-plan`}
-              className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-500"
+              className="rounded-lg bg-purple-600 px-3 py-2 text-sm font-semibold text-white hover:bg-purple-500 whitespace-nowrap"
             >
-              <Sparkles className="h-4 w-4" />
-              AIで週間プラン作成
+              <span className="sm:hidden">AIプラン</span>
+              <span className="hidden sm:inline">AIで週間プラン作成</span>
             </Link>
           </div>
         </div>
