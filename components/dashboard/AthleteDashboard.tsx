@@ -13,6 +13,7 @@ import { FitnessChart } from './FitnessChart'
 import { TodayStrengthDetail } from './TodayStrengthDetail'
 import { WellnessQuickCard } from './WellnessQuickCard'
 import { WeeklySummary } from './WeeklySummary'
+import { PhaseTimelineCard } from './PhaseTimelineCard'
 import type { Workout, StrengthAssignment } from '@/types'
 import { WORKOUT_TYPE_LABELS } from '@/types'
 
@@ -49,6 +50,9 @@ export function AthleteDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* 期分けタイムライン */}
+      {user && <PhaseTimelineCard athleteId={user.uid} />}
+
       {/* Wellness クイックカード */}
       {user && <WellnessQuickCard athleteId={user.uid} />}
 
