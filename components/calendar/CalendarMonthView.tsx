@@ -247,7 +247,7 @@ export function CalendarMonthView({ athleteId, isCoachView = false, refreshKey =
       {/* ドラッグヒント（コーチのみ・月表示のみ） */}
       {isCoachView && view === 'month' && (
         <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950/50 px-4 py-1.5 text-[10px] text-slate-500">
-          <span>💡 メニューをドラッグ&ドロップで別日に <span className="text-purple-400 font-medium">コピー</span> / Shift+ドロップで <span className="text-blue-400 font-medium">移動</span></span>
+          <span>ドラッグ&ドロップで別日に <span className="text-purple-400 font-medium">コピー</span> / Shift+ドロップで <span className="text-blue-400 font-medium">移動</span></span>
           {dropping && <span className="text-emerald-400 animate-pulse">処理中...</span>}
         </div>
       )}
@@ -466,7 +466,12 @@ function DayView(props: Pick<ViewProps, 'focalDate' | 'races' | 'todayStr' | 'wo
                         : 'border-yellow-500/30 bg-yellow-600/10 hover:bg-yellow-600/20'
                   )}
                 >
-                  <span className="text-2xl">{isRest ? '😴' : '🏃'}</span>
+                  <div className={clsx(
+                    'flex h-10 w-10 items-center justify-center rounded-lg text-[11px] font-bold shrink-0',
+                    isRest ? 'bg-blue-500/20 text-blue-300' : 'bg-emerald-500/20 text-emerald-300'
+                  )}>
+                    {isRest ? '休' : 'ラン'}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <h3 className="text-sm font-semibold text-white truncate">
@@ -487,7 +492,7 @@ function DayView(props: Pick<ViewProps, 'focalDate' | 'races' | 'todayStr' | 'wo
                     )}
                     {showAchievement && dayAchievement && dayAchievement.actual !== w.completed?.distanceKm && dayAchievement.actual !== w.completed?.durationMin && (
                       <p className="mt-0.5 text-[10px] text-emerald-400">
-                        ★ 同日合計 {dayAchievement.actual}{dayAchievement.unit} / 計画 {dayAchievement.planned}{dayAchievement.unit}
+                        同日合計 {dayAchievement.actual}{dayAchievement.unit} / 計画 {dayAchievement.planned}{dayAchievement.unit}
                       </p>
                     )}
                     {w.planned?.description && (
@@ -509,7 +514,9 @@ function DayView(props: Pick<ViewProps, 'focalDate' | 'races' | 'todayStr' | 'wo
                   : 'border-green-500/30 bg-green-600/10 hover:bg-green-600/20'
               )}
             >
-              <span className="text-2xl">💪</span>
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/20 text-purple-300 text-[11px] font-bold shrink-0">
+                筋トレ
+              </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-semibold text-white truncate">{s.templateSnapshot.name}</h3>
                 <p className="mt-0.5 text-xs text-slate-400">
@@ -636,7 +643,7 @@ function DayCell({
                     {showAchievement && dayAchievement && (
                       <span className="inline-block mr-1 font-bold">{dayAchievement.percent}%</span>
                     )}
-                    {isRest ? '😴' : '🏃'} {w.planned?.title ?? w.completed?.title ?? 'ラン'}
+                    <span className="opacity-70">[{isRest ? '休' : 'ラン'}]</span> {w.planned?.title ?? w.completed?.title ?? 'ラン'}
                   </Link>
                 )
               })
@@ -658,7 +665,7 @@ function DayCell({
                   isCoachView && 'cursor-grab active:cursor-grabbing'
                 )}
               >
-                💪 {s.templateSnapshot.name}
+                <span className="opacity-70">[筋]</span> {s.templateSnapshot.name}
               </Link>
             ))}
           </div>
