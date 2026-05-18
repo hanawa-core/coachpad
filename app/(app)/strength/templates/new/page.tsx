@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { TopBar } from '@/components/layout/TopBar'
 import { createStrengthTemplate } from '@/lib/firebase/firestore'
+import { YouTubeEmbed } from '@/components/strength/YouTubeEmbed'
 import {
   STRENGTH_CATEGORY_LABELS,
   STRENGTH_CATEGORY_GROUPS,
@@ -325,6 +326,7 @@ export default function NewTemplatePage() {
                     placeholder="YouTube動画URL（例: https://youtu.be/xxx）"
                     className="mt-2 w-full rounded border border-slate-700 bg-slate-900 px-2 py-1.5 text-xs text-white placeholder-slate-500"
                   />
+                  {ex.videoUrl && <YouTubeEmbed url={ex.videoUrl} />}
                 </div>
               ))}
             </div>

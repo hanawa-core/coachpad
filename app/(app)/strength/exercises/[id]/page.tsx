@@ -88,53 +88,53 @@ export default function ExerciseDetailPage() {
           種目ライブラリに戻る
         </Link>
 
-        <div className="rounded-xl border border-slate-800 bg-slate-900 p-5 sm:p-6 space-y-4">
-          {/* タイトル + 操作ボタン */}
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <h1 className="text-xl sm:text-2xl font-bold text-white break-words">{item.name}</h1>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                <span className="inline-flex rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-300">
-                  {STRENGTH_CATEGORY_LABELS[item.category] ?? item.category}
-                </span>
-                {item.targetMuscles.map((m) => (
-                  <span
-                    key={m}
-                    className="inline-flex rounded-full bg-slate-800 px-2.5 py-0.5 text-xs font-medium text-slate-300"
-                  >
-                    {m}
-                  </span>
-                ))}
-              </div>
-            </div>
-            {isOwner && (
-              <div className="flex shrink-0 gap-2">
-                <button
-                  onClick={handleDuplicate}
-                  disabled={duplicating}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
-                  title="複製して編集"
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                  複製
-                </button>
-                <Link
-                  href={`/strength/exercises/${id}/edit`}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                  編集
-                </Link>
-                <button
-                  onClick={handleDelete}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-red-900/40 bg-red-950/30 px-3 py-1.5 text-xs font-medium text-red-300 hover:bg-red-900/40"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  削除
-                </button>
-              </div>
-            )}
+        {/* タイトル */}
+        <div className="space-y-3">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white break-words leading-tight">
+            {item.name}
+          </h1>
+          <div className="flex flex-wrap gap-1.5">
+            <span className="inline-flex rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-300">
+              {STRENGTH_CATEGORY_LABELS[item.category] ?? item.category}
+            </span>
+            {item.targetMuscles.map((m) => (
+              <span
+                key={m}
+                className="inline-flex rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-300"
+              >
+                {m}
+              </span>
+            ))}
           </div>
+          {isOwner && (
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={handleDuplicate}
+                disabled={duplicating}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+              >
+                <Copy className="h-3.5 w-3.5" />
+                複製
+              </button>
+              <Link
+                href={`/strength/exercises/${id}/edit`}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                編集
+              </Link>
+              <button
+                onClick={handleDelete}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-red-900/40 bg-red-950/30 px-3 py-1.5 text-xs font-medium text-red-300 hover:bg-red-900/40"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                削除
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-xl border border-slate-800 bg-slate-900 p-5 sm:p-6 space-y-4">
 
           {/* 動画 */}
           {item.videoUrl && (

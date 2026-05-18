@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
 import { TopBar } from '@/components/layout/TopBar'
+import { YouTubeEmbed } from '@/components/strength/YouTubeEmbed'
 import {
   getStrengthTemplate,
   updateStrengthTemplate,
@@ -274,6 +275,7 @@ export default function EditTemplatePage() {
                     placeholder="YouTube動画URL"
                     className="mt-2 w-full rounded border border-slate-700 bg-slate-900 px-2 py-1.5 text-xs text-white"
                   />
+                  {ex.videoUrl && <YouTubeEmbed url={ex.videoUrl} />}
                 </div>
               ))}
             </div>
