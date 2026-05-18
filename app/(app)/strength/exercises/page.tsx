@@ -11,7 +11,6 @@ import {
   deleteExerciseLibraryItem,
   duplicateExerciseLibraryItem,
 } from '@/lib/firebase/firestore'
-import { YouTubeEmbed } from '@/components/strength/YouTubeEmbed'
 import type { ExerciseLibraryItem, StrengthCategory } from '@/types'
 import { STRENGTH_CATEGORY_LABELS, STRENGTH_CATEGORY_GROUPS } from '@/types'
 
@@ -226,9 +225,10 @@ export default function ExerciseLibraryPage() {
             ) : (
               <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
                 {filtered.map((ex) => (
-                  <div
+                  <Link
                     key={ex.id}
-                    className="rounded-xl border border-slate-800 bg-slate-900 p-4 overflow-hidden min-w-0"
+                    href={`/strength/exercises/${ex.id}`}
+                    className="block rounded-xl border border-slate-800 bg-slate-900 p-4 overflow-hidden min-w-0 hover:bg-slate-800/60 hover:border-slate-700 transition-colors"
                   >
                     <div className="flex items-start justify-between gap-2 min-w-0">
                       <div className="flex-1 min-w-0">
@@ -242,7 +242,11 @@ export default function ExerciseLibraryPage() {
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
                         <button
-                          onClick={() => handleDuplicate(ex.id)}
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            handleDuplicate(ex.id)
+                          }}
                           disabled={duplicating === ex.id}
                           className="rounded p-1 text-slate-500 hover:bg-slate-700 hover:text-white disabled:opacity-50"
                           title="複製して編集"
@@ -250,14 +254,22 @@ export default function ExerciseLibraryPage() {
                           <Copy className="h-3.5 w-3.5" />
                         </button>
                         <button
-                          onClick={() => router.push(`/strength/exercises/${ex.id}/edit`)}
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            router.push(`/strength/exercises/${ex.id}/edit`)
+                          }}
                           className="rounded p-1 text-slate-500 hover:bg-slate-700 hover:text-white"
                           title="編集"
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
                         <button
-                          onClick={() => handleDelete(ex.id)}
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            handleDelete(ex.id)
+                          }}
                           className="rounded p-1 text-slate-500 hover:bg-red-900/30 hover:text-red-400"
                           title="削除"
                         >
@@ -270,8 +282,7 @@ export default function ExerciseLibraryPage() {
                         {ex.instructions}
                       </p>
                     )}
-                    {ex.videoUrl && <YouTubeEmbed url={ex.videoUrl} />}
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
