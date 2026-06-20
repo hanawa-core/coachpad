@@ -10,6 +10,7 @@ import { TestCalculator } from '@/components/running/TestCalculator'
 import type { TestResult } from '@/components/running/TestCalculator'
 import { getPreset } from '@/lib/presets'
 import { getTestDef, type TestDef } from '@/lib/tests/catalog'
+import { TestTrendChart } from '@/components/tests/TestTrendChart'
 
 // ── テスト結果の蓄積 ───────────────────────────
 interface Accumulated {
@@ -101,12 +102,23 @@ export default function InitialTestsPage() {
       const updates: Record<string, { value: number; recordedAt: string }> = {
         ...(profile?.testResults ?? {}),
       }
+      const history: Record<string, { value: number; recordedAt: string }[]> = {
+        ...(profile?.testHistory ?? {}),
+      }
       const today = new Date().toISOString().slice(0, 10)
       for (const [k, v] of Object.entries(testValues)) {
         const num = parseFloat(v)
-        if (v.trim() && !Number.isNaN(num)) updates[k] = { value: num, recordedAt: today }
+        if (v.trim() && !Number.isNaN(num)) {
+          updates[k] = { value: num, recordedAt: today }
+          const arr = Array.isArray(history[k]) ? [...history[k]] : []
+          // 同日は上書き、別日は追加
+          const sameDay = arr.findIndex((p) => p.recordedAt === today)
+          if (sameDay >= 0) arr[sameDay] = { value: num, recordedAt: today }
+          else arr.push({ value: num, recordedAt: today })
+          history[k] = arr
+        }
       }
-      await updateUserProfile(user.uid, { testResults: updates })
+      await updateUserProfile(user.uid, { testResults: updates, testHistory: history })
       setResultsSaved(true)
     } finally {
       setResultsSaving(false)
@@ -212,6 +224,11 @@ export default function InitialTestsPage() {
                         <span className="text-xs text-slate-500">（前回 {prev.value} ・ {prev.recordedAt}）</span>
                       )}
                     </div>
+                    <TestTrendChart
+                      history={profile?.testHistory?.[t.key] ?? []}
+                      unit={t.unit}
+                      betterWhenLower={t.betterWhenLower}
+                    />
                   </div>
                 )
               })}

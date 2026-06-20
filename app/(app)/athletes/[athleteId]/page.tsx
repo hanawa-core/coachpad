@@ -7,16 +7,18 @@ import { ArrowLeft, Calendar, MessageCircle } from 'lucide-react'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { getAuth } from 'firebase/auth'
 import { TopBar } from '@/components/layout/TopBar'
-import { getAthleteCache, setAthletePlan } from '@/lib/firebase/firestore'
+import { getAthleteCache, setAthletePlan, getUserProfile } from '@/lib/firebase/firestore'
 import { CalendarMonthView } from '@/components/calendar/CalendarMonthView'
 import { FitnessChart } from '@/components/dashboard/FitnessChart'
 import { WeightTrendCard } from '@/components/dashboard/WeightTrendCard'
 import { WellnessChart } from '@/components/wellness/WellnessChart'
 import { PlanBadge } from '@/components/ui/PlanBadge'
 import { RunningSettingsPanel } from '@/components/athletes/RunningSettingsPanel'
-import { PLAN_CONFIG, type AthleteCache, type AthletePlan } from '@/types'
+import { PLAN_CONFIG, type AthleteCache, type AthletePlan, type UserProfile } from '@/types'
 import { presetOptions, getPreset, type ActivityPreset } from '@/lib/presets'
-import { groupedCatalog } from '@/lib/tests/catalog'
+import { groupedCatalog, getTestDef } from '@/lib/tests/catalog'
+import { TestTrendChart } from '@/components/tests/TestTrendChart'
+import { AdherenceCard } from '@/components/dashboard/AdherenceCard'
 
 export default function AthleteDetailPage() {
   const params = useParams()
@@ -28,12 +30,14 @@ export default function AthleteDetailPage() {
   const [assignedTests, setAssignedTests] = useState<string[]>([])
   const [testsSaving, setTestsSaving] = useState(false)
   const [testsSaved, setTestsSaved] = useState(false)
+  const [athleteProfile, setAthleteProfile] = useState<UserProfile | null>(null)
 
   useEffect(() => {
     getAthleteCache(id).then((a) => {
       setAthlete(a)
       setAssignedTests(a?.assignedTests ?? [])
     })
+    getUserProfile(id).then(setAthleteProfile)
   }, [id])
 
   function toggleTest(key: string) {
@@ -249,6 +253,34 @@ export default function AthleteDetailPage() {
             ))}
           </div>
         </div>
+
+        {/* 実施率（アドヒアランス） */}
+        <AdherenceCard athleteId={id} coachId={profile?.uid} />
+
+        {/* テスト結果の推移 */}
+        {athleteProfile && assignedTests.some((k) => athleteProfile.testResults?.[k]) && (
+          <div className="rounded-xl border border-slate-800 bg-slate-900 p-5 space-y-3">
+            <h3 className="text-base font-semibold text-white">テスト結果の推移</h3>
+            {assignedTests.map((k) => {
+              const def = getTestDef(k)
+              const latest = athleteProfile.testResults?.[k]
+              const history = athleteProfile.testHistory?.[k] ?? []
+              if (!def || !latest) return null
+              return (
+                <div key={k} className="rounded-lg border border-slate-800 bg-slate-950 p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <h4 className="text-sm font-semibold text-white">{def.name}</h4>
+                    <span className="text-sm text-slate-300">最新 {latest.value} {def.unit}</span>
+                  </div>
+                  <TestTrendChart history={history} unit={def.unit} betterWhenLower={def.betterWhenLower} />
+                  {history.length < 2 && (
+                    <p className="mt-1 text-xs text-slate-500">記録が2回以上で推移グラフが表示されます</p>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
 
         {athlete && getPreset(athlete.activityPreset as ActivityPreset).showRunningMetrics && (
           <RunningSettingsPanel athleteId={id} />

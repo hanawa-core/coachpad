@@ -86,6 +86,8 @@ export interface UserProfile {
   assignedTests?: string[] | null
   /** 選手が記録したテスト結果（testキー → 最新値） */
   testResults?: Record<string, { value: number; recordedAt: string }> | null
+  /** テスト結果の履歴（testキー → 時系列の記録）。推移グラフ用 */
+  testHistory?: Record<string, { value: number; recordedAt: string }[]> | null
 
   // ===== 拡張フィールド =====
   /** 性別 */

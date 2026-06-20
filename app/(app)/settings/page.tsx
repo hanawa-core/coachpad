@@ -5,7 +5,7 @@ import { useAuth } from '@/components/providers/AuthProvider'
 import { TopBar } from '@/components/layout/TopBar'
 import { StravaCard } from '@/components/strava/StravaCard'
 import Link from 'next/link'
-import { Users, Sparkles, User as UserIcon, Trophy, FlaskConical, BookOpen } from 'lucide-react'
+import { Users, Sparkles, User as UserIcon, Trophy, FlaskConical, BookOpen, Megaphone } from 'lucide-react'
 import { getPreset } from '@/lib/presets'
 
 export default function SettingsPage() {
@@ -127,6 +127,23 @@ export default function SettingsPage() {
             <StravaCard />
           </Suspense>
         )}
+
+        {/* リリースノート */}
+        <Link
+          href="/settings/release-notes"
+          className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900 p-6 hover:bg-slate-900/80 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-slate-800 p-2.5 text-slate-300">
+              <Megaphone className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-white">リリースノート</h3>
+              <p className="text-xs text-slate-500">アプリのアップデート履歴</p>
+            </div>
+          </div>
+          <span className="text-slate-500">→</span>
+        </Link>
 
         {/* マニュアル */}
         <Link

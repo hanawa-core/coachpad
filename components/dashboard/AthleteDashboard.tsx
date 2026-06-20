@@ -14,6 +14,7 @@ import { WeightTrendCard } from './WeightTrendCard'
 import { TodayStrengthDetail } from './TodayStrengthDetail'
 import { WellnessQuickCard } from './WellnessQuickCard'
 import { WeeklySummary } from './WeeklySummary'
+import { AdherenceCard } from './AdherenceCard'
 import { PhaseTimelineCard } from './PhaseTimelineCard'
 import type { Workout, StrengthAssignment } from '@/types'
 import { getPreset, sessionLabel } from '@/lib/presets'
@@ -63,6 +64,9 @@ export function AthleteDashboard() {
 
       {/* 週間サマリー */}
       {user && <WeeklySummary athleteId={user.uid} />}
+
+      {/* 実施率 */}
+      {user && <AdherenceCard athleteId={user.uid} />}
 
       {/* トレーニング負荷・フィットネスチャート（TSS利用プリセットのみ） */}
       {user && preset.showTss && <TrainingLoadCard athleteId={user.uid} />}
