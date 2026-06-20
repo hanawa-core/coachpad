@@ -2,33 +2,52 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { ArrowLeft } from 'lucide-react'
 import { onAuthStateChanged } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase/config'
 
+// 問い合わせ先
+const CONTACT_EMAIL = 'info@coredesign-athlete.com'
+// 公式LINEのURL（未設定なら表示しない）。例: 'https://lin.ee/xxxxxxx'
+const LINE_URL = ''
+
 type Role = 'coach' | 'athlete' | null
 
 export default function ManualPage() {
+  const router = useRouter()
   const [role, setRole] = useState<Role>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
-      if (!user) { setRole(null); return }
+      if (!user) { setRole(null); setIsAdmin(false); return }
       const snap = await getDoc(doc(db, 'users', user.uid))
       setRole((snap.data()?.role as Role) ?? null)
+      setIsAdmin(snap.data()?.isAdmin === true)
     })
     return () => unsub()
   }, [])
 
   return (
     <div className="space-y-2">
+      {/* 戻る */}
+      <button
+        onClick={() => router.back()}
+        className="mb-6 inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        戻る
+      </button>
+
       {/* ヘッダー */}
       <div className="mb-10 border-b border-slate-800 pb-8">
         <div className="mb-3 flex items-center gap-2">
           <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400">
             ユーザーマニュアル
           </span>
-          <span className="text-xs text-slate-500">v1.0 · 2026年5月</span>
+          <span className="text-xs text-slate-500">v2.0 · 2026年6月</span>
         </div>
         <h1 className="text-3xl font-bold text-white">
           {role === 'coach' ? 'コーチ向け使い方ガイド' : role === 'athlete' ? '選手向け使い方ガイド' : 'Coachpad の使い方'}
@@ -38,7 +57,7 @@ export default function ManualPage() {
             ? 'トレーニング計画・フィードバック・AI活用など、コーチが使う機能を説明します。'
             : role === 'athlete'
               ? 'ワークアウト記録・体調管理・コーチとのやり取りなど、選手が使う機能を説明します。'
-              : 'トレイルランニング・耐久系競技に特化したコーチングプラットフォームです。'}
+              : 'ランニングからジュニアスポーツ・競技アスリート・運動愛好家・ダイエットまで、あらゆる活動に対応する万能型コーチングプラットフォームです。'}
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           {(!role || role === 'coach') && (
@@ -64,13 +83,13 @@ export default function ManualPage() {
       {!role && (
         <Section id="overview" title="Coachpad とは">
           <p className="text-slate-400 leading-relaxed">
-            Coachpad はコーチと選手が一緒に使うトレーニング管理アプリです。コーチはトレーニング計画の作成・フィードバック・データ分析をこのアプリで行い、選手はワークアウト記録・体調管理・コーチとのやり取りをここで完結できます。
+            Coachpad はコーチと選手が一緒に使うトレーニング管理アプリです。コーチはトレーニング計画の作成・フィードバック・データ分析をこのアプリで行い、選手はワークアウト記録・体調管理・コーチとのやり取りをここで完結できます。選手ごとに「アクティビティタイプ」を設定でき、ランニング・ジュニア・競技アスリート・運動愛好家・ダイエットのそれぞれに最適化された記録項目・指標・AIメニューに切り替わります。
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <FeatureCard color="violet" title="AIトレーニングプラン" desc="選手の現状とレース目標を入力するだけで、ピーキング理論に基づいた日毎のメニューをAIが自動生成" />
-            <FeatureCard color="orange" title="Strava連携" desc="ガーミン・スント・カロスのデータをStrava経由で自動取り込み。記録の手間ゼロ" />
+            <FeatureCard color="violet" title="AIトレーニングプラン" desc="選手の現状と目標を入力するだけで、アクティビティタイプに応じた日毎のメニューをAIが自動生成" />
+            <FeatureCard color="orange" title="多競技対応プリセット" desc="ランニング／ジュニア／競技アスリート／運動愛好家／ダイエットに応じて記録項目・指標・AIが自動で切り替わる" />
             <FeatureCard color="emerald" title="赤ペンフィードバック" desc="フォーム動画に直接書き込み。どこを直すかが一目で伝わる" />
-            <FeatureCard color="blue" title="CTL/ATL/TSB管理" desc="フィットネス・疲労・調子をリアルタイムで把握。過負荷・怪我を予防" />
+            <FeatureCard color="blue" title="指標管理" desc="CTL/ATL/TSB（ランニング系）や体重・体脂肪・カロリー（ダイエット系）など目的に応じた指標をグラフで把握" />
           </div>
         </Section>
       )}
@@ -241,24 +260,26 @@ export default function ManualPage() {
           </div>
 
           <Section id="athlete-workout" title="ワークアウト記録">
-            <p className="text-slate-400 mb-4">Strava連携を設定している場合は自動で取り込まれます。手動記録はカレンダー → 「記録する」から行います。</p>
+            <p className="text-slate-400 mb-4">Strava連携を設定している場合は自動で取り込まれます。手動記録はカレンダー → 「記録する」から行います。表示される入力項目はアクティビティタイプによって自動的に切り替わります。</p>
             <Table
               headers={['項目', '内容']}
               rows={[
-                ['ワークアウトタイプ', 'イージーラン・テンポ走・インターバル・ロング走 など'],
-                ['距離', 'km単位'],
-                ['時間', '分単位'],
-                ['平均ペース', '分:秒/km'],
+                ['セッション種別', 'タイプごとの種別（イージーラン／スプリント／筋力トレーニング など）'],
+                ['距離・ペース・標高', 'ランニング系タイプで表示（km・分:秒/km・m）'],
+                ['時間', '分単位（全タイプ共通）'],
                 ['平均・最大心拍', 'bpm'],
-                ['獲得標高', 'm'],
+                ['RPE（主観的運動強度）', '競技アスリートタイプ'],
+                ['体重・体脂肪率・消費カロリー', 'ダイエット・運動愛好家タイプ'],
+                ['TSS / CTL / ATL', 'ランニング・競技タイプ（Garmin等から）'],
                 ['メモ', '自由記述'],
               ]}
             />
-            <SubSection title="ワークアウト達成率">
+            <Note text="記録した内容はワークアウト詳細ページで確認でき、ダイエットタイプでは体重・体脂肪の推移がダッシュボードのグラフに反映されます。" />
+            <SubSection title="ワークアウト達成率（計画がある場合）">
               <div className="flex flex-wrap gap-2">
-                <Badge color="emerald" label="90%以上 — 達成" />
-                <Badge color="yellow" label="70〜90% — 概ね達成" />
-                <Badge color="red" label="70%未満 — 未達" />
+                <Badge color="emerald" label="95%以上 — 達成" />
+                <Badge color="yellow" label="70〜95% — 概ね達成" />
+                <Badge color="red" label="40%未満 — 未達" />
               </div>
             </SubSection>
           </Section>
@@ -328,21 +349,39 @@ export default function ManualPage() {
         <RoleHeader label="共通設定" color="slate" />
       </div>
 
+      <Section id="settings-activity" title="アクティビティタイプ（目的別プリセット）">
+        <p className="text-slate-400 mb-4">
+          選手ごとに取り組む活動を選ぶと、記録項目・表示される指標・AIメニュー・期分け・ダッシュボードのグラフがそのタイプに最適化されます。コーチは選手詳細ページから、選手自身は「設定 → プロフィール」から変更できます。コーチは「既定アクティビティタイプ」を設定でき、招待した新しい選手に自動適用されます。
+        </p>
+        <Table
+          headers={['タイプ', '主な指標', '向いている人']}
+          rows={[
+            ['ランニング', '距離・ペース・心拍・TSS/CTL/ATL', 'レースを目指すランナー（既定）'],
+            ['ジュニアスポーツ', '時間・距離（任意）', '成長期の選手。発育発達・多様な動作・楽しさ重視'],
+            ['競技アスリート（S&C）', '時間・RPE・心拍・TSS', '競技の強化。ストレングス&コンディショニング'],
+            ['運動愛好家', '時間・体重・体脂肪', '健康維持・運動習慣の定着'],
+            ['ダイエット', '体重・体脂肪・消費カロリー', '減量・体組成改善'],
+          ]}
+        />
+        <Note text="ランニング以外のタイプでは、レース設定・初期テスト・心拍ゾーン・CTL/ATLなどランニング専用の機能は自動的に非表示になります。ダイエット・運動愛好家タイプでは体重・体脂肪の推移グラフが表示されます。" />
+      </Section>
+
       <Section id="settings-profile" title="プロフィール編集">
-        <p className="text-slate-400 mb-4">設定 → プロフィール から編集します。</p>
+        <p className="text-slate-400 mb-4">設定 → プロフィール から編集します。生年月日を入力すると年齢が自動表示されます。</p>
         <Table
           headers={['項目', '対象']}
           rows={[
-            ['名前・性別・生年月日', '全員'],
+            ['名前・性別・生年月日（年齢自動計算）', '全員'],
             ['身長・体重', '全員'],
             ['居住地・自己紹介', '全員'],
-            ['LTHR（乳酸閾値心拍）', '選手のみ'],
+            ['アクティビティタイプ', '選手（自己設定）'],
+            ['既定アクティビティタイプ', 'コーチ（新規選手へ適用）'],
+            ['LTHR（乳酸閾値心拍）', '選手・ランニング/競技タイプ'],
             ['最大心拍・安静時心拍', '選手のみ'],
-            ['閾値ペース', '選手のみ'],
-            ['FTP', '選手のみ'],
+            ['閾値ペース・FTP', '選手・ランニングタイプ'],
           ]}
         />
-        <Note text="LTHRを設定すると5段階の心拍ゾーンが自動計算されます。" />
+        <Note text="LTHRを設定すると5段階の心拍ゾーンが自動計算されます（ランニング・競技タイプのみ）。" />
       </Section>
 
       {role !== 'coach' && (
@@ -371,6 +410,39 @@ export default function ManualPage() {
         </>
       )}
 
+      <Section id="settings-notifications" title="通知・プッシュ通知">
+        <p className="text-slate-400 mb-4">
+          メニュー → 通知 から、アプリ内通知の確認とプッシュ通知の有効化ができます。「通知を有効にする」をタップしてブラウザの許可を与えると、アプリを開いていなくても以下のタイミングで端末に通知が届きます。
+        </p>
+        <ul className="space-y-1.5 text-slate-400">
+          <Li text="コーチがメニューを追加したとき" />
+          <Li text="選手がワークアウト・ウェルネスを記録したとき" />
+          <Li text="コーチがフィードバック（赤ペン）を書いたとき" />
+          <Li text="チャットメッセージが届いたとき" />
+          <Li text="誕生日（お祝いメッセージが届きます🎉）" />
+        </ul>
+        <Note text="プッシュ通知はホーム画面に追加（PWAインストール）して使うと、より安定して届きます。iPhoneはホーム画面に追加後に通知を有効化してください。" />
+      </Section>
+
+      {/* 管理者向け（管理者のみ） */}
+      {isAdmin && (
+        <>
+          <div id="admin" className="pt-4">
+            <RoleHeader label="管理者向け機能" color="violet" />
+          </div>
+          <Section id="admin-dashboard" title="管理者ダッシュボード">
+            <p className="text-slate-400 mb-4">
+              サイドバーの「管理者」から、全ユーザー（コーチ・選手）の情報を横断的に閲覧できます。運営者のみがアクセスできます。
+            </p>
+            <ul className="space-y-1.5 text-slate-400">
+              <Li text="全ユーザー一覧（名前・年齢・メール・担当コーチ・タイプ・プラン・CTL/ATL/TSB）と検索" />
+              <Li text="ユーザー詳細：プロフィール・集計・ワークアウト・ウェルネス・筋トレ・担当選手・AIプロフィール・招待・チャット・生データ(JSON)" />
+            </ul>
+            <Note text="管理者権限は users ドキュメントの isAdmin、または環境変数 ADMIN_UIDS で付与します。" />
+          </Section>
+        </>
+      )}
+
       {/* FAQ */}
       <div id="faq" className="pt-6">
         <h2 className="text-2xl font-bold text-white mb-4">よくある質問</h2>
@@ -387,7 +459,11 @@ export default function ManualPage() {
         {role !== 'coach' && (
           <FaqItem q="心拍ゾーンが表示されない" a="設定 → プロフィール でLTHR（乳酸閾値心拍）を設定するとゾーンが自動計算されます。「初期テストガイド」の「20分全力走テスト」で計測できます。" />
         )}
-        <FaqItem q="CTL/ATLとは何ですか" a="トレーニング負荷の指標です。CTL（慢性トレーニング負荷）はフィットネスの蓄積、ATL（急性トレーニング負荷）は直近の疲労、TSB（トレーニングストレスバランス）はその差で調子を表します。Strava連携またはワークアウト記録により自動更新されます。" />
+        <FaqItem q="CTL/ATLとは何ですか" a="トレーニング負荷の指標です。CTL（慢性トレーニング負荷）はフィットネスの蓄積、ATL（急性トレーニング負荷）は直近の疲労、TSB（トレーニングストレスバランス）はその差で調子を表します。Strava連携またはワークアウト記録により自動更新されます（ランニング・競技タイプで表示）。" />
+        <FaqItem q="アクティビティタイプを変更したい" a="選手自身は「設定 → プロフィール → アクティビティタイプ」から、コーチは選手詳細ページの「アクティビティタイプ」から変更できます。変更すると記録項目・指標・AIメニュー・グラフが切り替わります。既存の記録は保持されます。" />
+        <FaqItem q="ダイエットなのに距離やペースが出る / 体重欄がない" a="アクティビティタイプが「ダイエット」または「運動愛好家」になっているか確認してください。タイプを切り替えると、体重・体脂肪・消費カロリーの入力欄と推移グラフが表示され、ランニング専用の項目は非表示になります。" />
+        <FaqItem q="プッシュ通知はアプリアイコンに数字（バッジ）で出ますか" a="通知はまずバナー／ロック画面の通知として届きます。アプリをホーム画面に追加（PWAインストール）すると、対応端末では未読件数がアイコンにバッジ表示されます。通知自体は「メニュー → 通知 → 通知を有効にする」で有効化してください。" />
+        <FaqItem q="誕生日のお祝いは届きますか" a="プロフィールに生年月日を登録しておくと、誕生日当日にお祝いの通知が届きます（プッシュ通知を有効にしているとプッシュでも届きます）。" />
         {role !== 'coach' && (
           <FaqItem q="動画アップロードができない" a="コーチが招待済みであることが必要です。コーチが未設定の場合はアップロードできません。" />
         )}
@@ -398,8 +474,16 @@ export default function ManualPage() {
         <p className="text-sm text-slate-500">Coachpad は合同会社コアデザインが開発・運営しています。</p>
         <p className="mt-1 text-sm text-slate-500">
           お問い合わせ:{' '}
-          <a href="mailto:s.hanawa@coredesign-athlete.com" className="text-emerald-400 hover:underline">
-            s.hanawa@coredesign-athlete.com
+          {LINE_URL && (
+            <>
+              <a href={LINE_URL} target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">
+                LINE
+              </a>
+              {' · '}
+            </>
+          )}
+          <a href={`mailto:${CONTACT_EMAIL}`} className="text-emerald-400 hover:underline">
+            {CONTACT_EMAIL}
           </a>
         </p>
         <div className="mt-4 flex items-center justify-center gap-4 text-xs text-slate-600">

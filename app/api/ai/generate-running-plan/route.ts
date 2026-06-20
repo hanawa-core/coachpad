@@ -8,6 +8,8 @@ import {
   fetchCoachDocumentIds,
 } from '@/lib/ai/coach-profile'
 import { checkAndIncrementRateLimit, RATE_LIMIT_ERROR_MESSAGE } from '@/lib/ai/rate-limit'
+import { getPreset } from '@/lib/presets'
+import { ACTIVITY_PRESETS } from '@/lib/presets/types'
 
 const RequestBody = z.object({
   athleteName: z.string(),
@@ -18,38 +20,8 @@ const RequestBody = z.object({
   raceDistance: z.string().nullable(),
   currentFitness: z.string(),
   notes: z.string().optional(),
+  activityPreset: z.enum(ACTIVITY_PRESETS as [string, ...string[]]).optional(),
 })
-
-const SYSTEM_PROMPT = `あなたはトレイルランニング・耐久系競技の専門コーチです。
-選手の現状とレース目標を踏まえ、週ごとに最適化された日毎のメニューを作成してください。
-ランニング練習だけでなく、必要に応じて筋力トレーニング日・休養日も含めてください。
-
-原則:
-- ハード/イージーの原則: 強度の高い練習の翌日はリカバリー
-- 週間TSS（負荷）の上昇は10%以下を目安
-- 期間内に長距離走（ロング走）を週1回必ず含める
-- 完全休養日を週1〜2日設定
-- ペースは選手の現状（Easy/Threshold/VO2max）に合わせて指定
-- 種目ライブラリが提供されている場合、筋力トレーニング日は必ずその種目から選択すること
-
-⚠️ ピーキング理論（必ず守ってください）:
-- レース日から逆算してフェーズを判定
-- 【ボリューム期】レース42日以上前 or レース未設定: 有酸素ベース構築・走行量を確保
-- 【ビルド期】レース14〜42日前: レース特異的強度を上げる、ロング走最大化
-- 【ピーク】レース8〜14日前: 質を維持しつつ量を10〜20%減らす
-- 【テーパー】レース1〜7日前: 量を50%まで減量、強度は1〜2回維持
-- 【レースウィーク】レース当日 ±3日: 軽いジョグ・休養中心
-- 【リカバリー】レース後14日以内: 完全休養 or 軽いジョグのみ。強度練習は禁止
-
-出力は構造化JSONで返してください。各日のworkoutTypeは以下から選択:
-- easy_run: イージーラン
-- tempo: テンポ走（閾値走）
-- interval: インターバル
-- long_run: ロング走
-- race: レース
-- cross_training: 筋力トレーニング（strengthExercisesに種目を設定）
-- rest: 休養
-- other: その他`
 
 export async function POST(req: NextRequest) {
   const auth = req.headers.get('authorization')
@@ -76,6 +48,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: RATE_LIMIT_ERROR_MESSAGE }, { status: 429 })
   }
 
+  const preset = getPreset(body.activityPreset as never)
+
   // ── 選手プロフィール（LTHR・CTL等）自動取得 ──
   let athleteProfileSummary = ''
   if (body.athleteId) {
@@ -87,13 +61,21 @@ export async function POST(req: NextRequest) {
       const lines: string[] = ['\n選手の詳細データ（自動取得）:']
       if (userSnap.exists) {
         const ud = userSnap.data()!
-        if (ud.thresholdHr) lines.push(`- 閾値心拍 (LTHR): ${ud.thresholdHr} bpm`)
-        if (ud.maxHr) lines.push(`- 最大心拍: ${ud.maxHr} bpm`)
-        if (ud.restingHr) lines.push(`- 安静時心拍: ${ud.restingHr} bpm`)
-        if (ud.thresholdPace) lines.push(`- 閾値ペース: ${ud.thresholdPace}/km`)
-        if (ud.ftp) lines.push(`- FTP: ${ud.ftp} W`)
+        // 心拍ゾーン/パワー系はプリセットが許可する場合のみAIへ渡す
+        if (preset.showHrZones) {
+          if (ud.thresholdHr) lines.push(`- 閾値心拍 (LTHR): ${ud.thresholdHr} bpm`)
+          if (ud.maxHr) lines.push(`- 最大心拍: ${ud.maxHr} bpm`)
+          if (ud.restingHr) lines.push(`- 安静時心拍: ${ud.restingHr} bpm`)
+          if (ud.thresholdPace) lines.push(`- 閾値ペース: ${ud.thresholdPace}/km`)
+          if (ud.ftp) lines.push(`- FTP: ${ud.ftp} W`)
+        }
+        // 体組成系プリセットでは身長/体重を渡す
+        if (preset.primaryChart === 'weight') {
+          if (ud.heightCm) lines.push(`- 身長: ${ud.heightCm} cm`)
+          if (ud.weightKg) lines.push(`- 体重: ${ud.weightKg} kg`)
+        }
       }
-      if (athleteSnap.exists) {
+      if (athleteSnap.exists && preset.showTss) {
         const ad = athleteSnap.data()!
         if (ad.latestMetrics) {
           lines.push(
@@ -197,6 +179,15 @@ export async function POST(req: NextRequest) {
           `- 睡眠の質（1=最悪, 5=最高）平均: ${avg('sleepQuality')?.toFixed(1) ?? '不明'}`,
           `- ストレス（1=なし, 5=極度）平均: ${avg('stress')?.toFixed(1) ?? '不明'}`,
         ]
+        // 体組成志向プリセットでは体重推移を渡す
+        if (preset.primaryChart === 'weight') {
+          const weights = recent.map((e) => e.weight).filter((v) => v != null)
+          if (weights.length > 0) {
+            lines.push(
+              `- 体重（直近）: ${weights[weights.length - 1]} kg（7日平均 ${avg('weight')?.toFixed(1) ?? '不明'} kg）`
+            )
+          }
+        }
         const recentNotes = recent
           .filter((e) => e.notes?.trim())
           .slice(-3)
@@ -232,7 +223,7 @@ ${exerciseLibrarySummary}
 
   try {
     const client = getAnthropicClient()
-    const systemBlocks = await buildSystemPromptWithCoach(userId, SYSTEM_PROMPT)
+    const systemBlocks = await buildSystemPromptWithCoach(userId, preset.aiSystemPrompt)
     const documents = await fetchCoachDocumentIds(userId)
 
     const userContent: any[] = []

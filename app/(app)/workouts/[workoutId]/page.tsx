@@ -12,7 +12,8 @@ import { calculateAchievement, calculateDayAchievement } from '@/lib/achievement
 import { ZoneAnalysis } from '@/components/workouts/ZoneAnalysis'
 import { WorkoutMapSection } from '@/components/workouts/WorkoutMapSection'
 import type { Workout } from '@/types'
-import { WORKOUT_TYPE_LABELS } from '@/types'
+import { getPreset, sessionLabel } from '@/lib/presets'
+import type { MetricDef } from '@/lib/presets'
 
 export default function WorkoutDetailPage() {
   const params = useParams()
@@ -72,6 +73,17 @@ export default function WorkoutDetailPage() {
   }
 
   const isCoach = profile?.role === 'coach'
+  // このワークアウトが記録されたプリセット（未設定は running）
+  const preset = getPreset(workout.completed?.activityPreset)
+  const metricValue = (m: MetricDef): string => {
+    const c = workout.completed
+    if (!c) return '-'
+    const raw = m.field.startsWith('metrics.')
+      ? c.metrics?.[m.field.slice('metrics.'.length)]
+      : (c as unknown as Record<string, unknown>)[m.field]
+    if (raw == null || raw === '') return '-'
+    return m.unit ? `${raw} ${m.unit}` : String(raw)
+  }
   // 同日合算の達成率を優先（朝晩2回ラン等）。1件のみなら従来の単発判定を使用。
   const dayAchievement = sameDateWorkouts.length > 1
     ? calculateDayAchievement(sameDateWorkouts)
@@ -139,7 +151,7 @@ export default function WorkoutDetailPage() {
             <div className="rounded-xl border border-blue-700 bg-blue-950/20 p-5">
               <h2 className="mb-3 text-sm font-semibold text-blue-300">📋 計画</h2>
               <dl className="space-y-1.5 text-sm">
-                <Row label="種別" value={WORKOUT_TYPE_LABELS[workout.planned.workoutType]} />
+                <Row label="種別" value={sessionLabel(preset.id, workout.planned.workoutType)} />
                 <Row label="目標距離" value={workout.planned.targetDistanceKm ? `${workout.planned.targetDistanceKm} km` : '-'} />
                 <Row label="目標時間" value={workout.planned.targetDurationMin ? `${workout.planned.targetDurationMin} 分` : '-'} />
                 <Row label="目標ペース" value={workout.planned.targetPaceMinPerKm ?? '-'} />
@@ -156,13 +168,15 @@ export default function WorkoutDetailPage() {
             <div className="rounded-xl border border-emerald-700 bg-emerald-950/20 p-5">
               <h2 className="mb-3 text-sm font-semibold text-emerald-300">✅ 実績</h2>
               <dl className="space-y-1.5 text-sm">
-                <Row label="距離" value={workout.completed.distanceKm ? `${workout.completed.distanceKm} km` : '-'} />
-                <Row label="時間" value={workout.completed.durationMin ? `${workout.completed.durationMin} 分` : '-'} />
-                <Row label="平均ペース" value={workout.completed.avgPaceMinPerKm ?? '-'} />
-                <Row label="平均HR" value={workout.completed.avgHeartRate ? `${workout.completed.avgHeartRate} bpm` : '-'} />
-                <Row label="最大HR" value={workout.completed.maxHeartRate ? `${workout.completed.maxHeartRate} bpm` : '-'} />
-                <Row label="獲得標高" value={workout.completed.elevationGainM ? `${workout.completed.elevationGainM} m` : '-'} />
-                <Row label="TSS / CTL / ATL" value={`${workout.completed.tss ?? '-'} / ${workout.completed.ctl ?? '-'} / ${workout.completed.atl ?? '-'}`} />
+                {preset.metrics.map((m) => (
+                  <Row key={m.key} label={m.label} value={metricValue(m)} />
+                ))}
+                {preset.showTss && (
+                  <Row
+                    label="TSS / CTL / ATL"
+                    value={`${workout.completed.tss ?? '-'} / ${workout.completed.ctl ?? '-'} / ${workout.completed.atl ?? '-'}`}
+                  />
+                )}
               </dl>
               {workout.completed.notes && (
                 <div className="mt-3 rounded-lg bg-slate-950/40 p-3 text-sm text-slate-300 whitespace-pre-wrap">
@@ -176,8 +190,8 @@ export default function WorkoutDetailPage() {
         {/* 走行ルート地図（GPS データがある場合） */}
         {workout.completed && <WorkoutMapSection workout={workout} />}
 
-        {/* ゾーン分析（実績がある場合） */}
-        {workout.completed && <ZoneAnalysis workout={workout} profile={profile} />}
+        {/* ゾーン分析（実績がある場合・心拍ゾーン利用プリセットのみ） */}
+        {workout.completed && preset.showHrZones && <ZoneAnalysis workout={workout} profile={profile} />}
 
         {/* コーチフィードバック（赤ペン先生・テキスト） */}
         <div className="rounded-xl border border-red-700/50 bg-red-950/10 p-5">

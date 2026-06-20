@@ -10,15 +10,17 @@ import {
 } from '@/lib/firebase/firestore'
 import { TrainingLoadCard } from './TrainingLoadCard'
 import { FitnessChart } from './FitnessChart'
+import { WeightTrendCard } from './WeightTrendCard'
 import { TodayStrengthDetail } from './TodayStrengthDetail'
 import { WellnessQuickCard } from './WellnessQuickCard'
 import { WeeklySummary } from './WeeklySummary'
 import { PhaseTimelineCard } from './PhaseTimelineCard'
 import type { Workout, StrengthAssignment } from '@/types'
-import { WORKOUT_TYPE_LABELS } from '@/types'
+import { getPreset, sessionLabel } from '@/lib/presets'
 
 export function AthleteDashboard() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
+  const preset = getPreset(profile?.activityPreset)
   const [todaysWorkouts, setTodaysWorkouts] = useState<Workout[]>([])
   const [todaysStrength, setTodaysStrength] = useState<StrengthAssignment[]>([])
   const [loading, setLoading] = useState(true)
@@ -50,8 +52,8 @@ export function AthleteDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* 期分けタイムライン */}
-      {user && <PhaseTimelineCard athleteId={user.uid} />}
+      {/* 期分けタイムライン（レース志向プリセットのみ） */}
+      {user && preset.showRacePhasing && <PhaseTimelineCard athleteId={user.uid} />}
 
       {/* Wellness クイックカード */}
       {user && <WellnessQuickCard athleteId={user.uid} />}
@@ -62,11 +64,12 @@ export function AthleteDashboard() {
       {/* 週間サマリー */}
       {user && <WeeklySummary athleteId={user.uid} />}
 
-      {/* トレーニング負荷 */}
-      {user && <TrainingLoadCard athleteId={user.uid} />}
+      {/* トレーニング負荷・フィットネスチャート（TSS利用プリセットのみ） */}
+      {user && preset.showTss && <TrainingLoadCard athleteId={user.uid} />}
+      {user && preset.showTss && <FitnessChart athleteId={user.uid} />}
 
-      {/* フィットネスチャート */}
-      {user && <FitnessChart athleteId={user.uid} />}
+      {/* 体重・体脂肪トレンド（体組成志向プリセット） */}
+      {user && preset.primaryChart === 'weight' && <WeightTrendCard athleteId={user.uid} />}
 
       {/* 本日の予定 */}
       <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
@@ -88,10 +91,10 @@ export function AthleteDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="inline-block rounded bg-blue-500/20 px-1.5 py-0.5 text-[10px] font-medium text-blue-300 mb-1">
-                      🏃 ランニング
+                      {sessionLabel(preset.id, w.planned?.workoutType ?? 'other')}
                     </span>
                     <p className="text-sm font-medium text-white">
-                      {w.planned?.title ?? WORKOUT_TYPE_LABELS[w.planned?.workoutType ?? 'other']}
+                      {w.planned?.title ?? sessionLabel(preset.id, w.planned?.workoutType ?? 'other')}
                     </p>
                     {w.planned?.targetDistanceKm && (
                       <p className="mt-1 text-xs text-slate-500">

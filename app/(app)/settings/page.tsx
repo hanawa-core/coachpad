@@ -6,9 +6,11 @@ import { TopBar } from '@/components/layout/TopBar'
 import { StravaCard } from '@/components/strava/StravaCard'
 import Link from 'next/link'
 import { Users, Sparkles, User as UserIcon, Trophy, FlaskConical, BookOpen } from 'lucide-react'
+import { getPreset } from '@/lib/presets'
 
 export default function SettingsPage() {
   const { profile } = useAuth()
+  const preset = getPreset(profile?.activityPreset)
 
   return (
     <>
@@ -76,8 +78,8 @@ export default function SettingsPage() {
           </>
         )}
 
-        {/* 初期テストガイド（選手のみ） */}
-        {profile?.role === 'athlete' && (
+        {/* 初期テストガイド（選手のみ・ランニング系プリセット） */}
+        {profile?.role === 'athlete' && preset.showTestCalculator && (
           <Link
             href="/settings/tests"
             className="flex items-center justify-between rounded-xl border border-purple-700/50 bg-purple-950/20 p-6 hover:bg-purple-950/30 transition-colors"
@@ -97,8 +99,8 @@ export default function SettingsPage() {
           </Link>
         )}
 
-        {/* ターゲットレース（選手のみ） */}
-        {profile?.role === 'athlete' && (
+        {/* ターゲットレース（選手のみ・レース志向プリセット） */}
+        {profile?.role === 'athlete' && preset.showRacePhasing && (
           <Link
             href="/settings/races"
             className="flex items-center justify-between rounded-xl border border-amber-700/50 bg-amber-950/10 p-6 hover:bg-amber-950/20 transition-colors"

@@ -67,6 +67,12 @@ export async function POST(req: NextRequest) {
           throw new Error('invite-coach-missing')
         }
 
+        // コーチの既定アクティビティプリセットを新規選手へ適用（未設定なら running 扱い）
+        const coachSnap = await tx.get(db.collection('users').doc(inv.coachId))
+        const coachDefault = coachSnap.exists
+          ? (coachSnap.data()?.defaultActivityPreset ?? null)
+          : null
+
         tx.set(userRef, {
           uid,
           email: userEmail,
@@ -77,6 +83,7 @@ export async function POST(req: NextRequest) {
           timezone: 'Asia/Tokyo',
           targetRaces: [],
           createdAt: FieldValue.serverTimestamp(),
+          activityPreset: coachDefault,
         })
 
         tx.set(db.collection('athletes').doc(uid), {
@@ -91,6 +98,7 @@ export async function POST(req: NextRequest) {
           lastWorkoutLoggedAt: null,
           lastStrengthLoggedAt: null,
           weeklyStats: null,
+          activityPreset: coachDefault,
         })
 
         tx.update(inviteRef, {

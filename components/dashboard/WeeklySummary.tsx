@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '@/lib/firebase/config'
-import { TrendingUp, Calendar, Activity, Clock, Mountain } from 'lucide-react'
+import { TrendingUp, Calendar, Activity, Clock, Mountain, Flame, Scale } from 'lucide-react'
 import type { Workout } from '@/types'
+import { useAuth } from '@/components/providers/AuthProvider'
+import { getPreset } from '@/lib/presets'
 
 interface Props {
   athleteId: string
@@ -16,9 +18,13 @@ interface WeekStats {
   duration: number
   elevation: number
   tss: number
+  calories: number
+  weightLatest: number | null
 }
 
 export function WeeklySummary({ athleteId }: Props) {
+  const { profile } = useAuth()
+  const preset = getPreset(profile?.activityPreset)
   const [stats, setStats] = useState<{ thisWeek: WeekStats; lastWeek: WeekStats } | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -58,13 +64,6 @@ export function WeeklySummary({ athleteId }: Props) {
           delta={stats.thisWeek.workouts - stats.lastWeek.workouts}
         />
         <Stat
-          icon={Activity}
-          label="距離"
-          value={stats.thisWeek.distance.toFixed(1)}
-          unit="km"
-          delta={Number((stats.thisWeek.distance - stats.lastWeek.distance).toFixed(1))}
-        />
-        <Stat
           icon={Clock}
           label="時間"
           value={`${Math.floor(stats.thisWeek.duration / 60)}:${String(Math.round(stats.thisWeek.duration % 60)).padStart(2, '0')}`}
@@ -72,20 +71,60 @@ export function WeeklySummary({ athleteId }: Props) {
           delta={Math.round(stats.thisWeek.duration - stats.lastWeek.duration)}
           deltaUnit="分"
         />
-        <Stat
-          icon={Mountain}
-          label="獲得標高"
-          value={`${Math.round(stats.thisWeek.elevation)}`}
-          unit="m"
-          delta={Math.round(stats.thisWeek.elevation - stats.lastWeek.elevation)}
-        />
-        <Stat
-          icon={TrendingUp}
-          label="TSS"
-          value={`${Math.round(stats.thisWeek.tss)}`}
-          unit=""
-          delta={Math.round(stats.thisWeek.tss - stats.lastWeek.tss)}
-        />
+
+        {/* ランニング系指標 */}
+        {preset.showRunningMetrics && (
+          <Stat
+            icon={Activity}
+            label="距離"
+            value={stats.thisWeek.distance.toFixed(1)}
+            unit="km"
+            delta={Number((stats.thisWeek.distance - stats.lastWeek.distance).toFixed(1))}
+          />
+        )}
+        {preset.showRunningMetrics && (
+          <Stat
+            icon={Mountain}
+            label="獲得標高"
+            value={`${Math.round(stats.thisWeek.elevation)}`}
+            unit="m"
+            delta={Math.round(stats.thisWeek.elevation - stats.lastWeek.elevation)}
+          />
+        )}
+        {preset.showTss && (
+          <Stat
+            icon={TrendingUp}
+            label="TSS"
+            value={`${Math.round(stats.thisWeek.tss)}`}
+            unit=""
+            delta={Math.round(stats.thisWeek.tss - stats.lastWeek.tss)}
+          />
+        )}
+
+        {/* 体組成系指標 */}
+        {preset.primaryChart === 'weight' && stats.thisWeek.calories > 0 && (
+          <Stat
+            icon={Flame}
+            label="消費カロリー"
+            value={`${Math.round(stats.thisWeek.calories)}`}
+            unit="kcal"
+            delta={Math.round(stats.thisWeek.calories - stats.lastWeek.calories)}
+          />
+        )}
+        {preset.primaryChart === 'weight' && stats.thisWeek.weightLatest != null && (
+          <Stat
+            icon={Scale}
+            label="体重(直近)"
+            value={`${stats.thisWeek.weightLatest}`}
+            unit="kg"
+            delta={
+              stats.lastWeek.weightLatest != null
+                ? Number((stats.thisWeek.weightLatest - stats.lastWeek.weightLatest).toFixed(1))
+                : 0
+            }
+            deltaUnit="kg"
+          />
+        )}
       </div>
 
       <p className="mt-3 text-xs text-slate-500">前週比 (デルタ)</p>
@@ -150,18 +189,25 @@ function computeWeekStats(workouts: Workout[], weekOffset: number): WeekStats {
   const startStr = targetMonday.toISOString().split('T')[0]
   const endStr = targetSunday.toISOString().split('T')[0]
 
-  const inRange = workouts.filter((w) => w.date >= startStr && w.date <= endStr)
+  const inRange = workouts
+    .filter((w) => w.date >= startStr && w.date <= endStr)
+    .sort((a, b) => a.date.localeCompare(b.date))
 
   let distance = 0
   let duration = 0
   let elevation = 0
   let tss = 0
+  let calories = 0
+  let weightLatest: number | null = null
   inRange.forEach((w) => {
     if (!w.completed) return
     distance += w.completed.distanceKm ?? 0
     duration += w.completed.durationMin ?? 0
     elevation += w.completed.elevationGainM ?? 0
     tss += w.completed.tss ?? (w.completed.durationMin ?? 0) * 0.85 + (w.completed.distanceKm ?? 0) * 1.5
+    calories += w.completed.calories ?? 0
+    const weight = w.completed.metrics?.weightKg
+    if (typeof weight === 'number' && !Number.isNaN(weight)) weightLatest = weight
   })
 
   return {
@@ -170,5 +216,7 @@ function computeWeekStats(workouts: Workout[], weekOffset: number): WeekStats {
     duration,
     elevation,
     tss,
+    calories,
+    weightLatest,
   }
 }

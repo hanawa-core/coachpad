@@ -15,6 +15,7 @@ import {
   Video,
   Heart,
   MessageCircle,
+  Shield,
 } from 'lucide-react'
 import { subscribeChatThreads, computeUnreadCount } from '@/lib/firebase/firestore'
 import { useAuth } from '@/components/providers/AuthProvider'
@@ -91,7 +92,10 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void } = {}) {
     return unsub
   }, [user])
 
-  const nav = profile?.role === 'coach' ? coachNav : athleteNav
+  const baseNav = profile?.role === 'coach' ? coachNav : athleteNav
+  const nav = profile?.isAdmin
+    ? [...baseNav, { href: '/admin', label: '管理者', icon: Shield }]
+    : baseNav
 
   const handleLogout = async () => {
     await logOut()

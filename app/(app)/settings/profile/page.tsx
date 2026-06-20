@@ -8,6 +8,9 @@ import { TopBar } from '@/components/layout/TopBar'
 import { updateUserProfile } from '@/lib/firebase/firestore'
 import { TestCalculator } from '@/components/running/TestCalculator'
 import type { TestResult } from '@/components/running/TestCalculator'
+import { presetOptions, getPreset } from '@/lib/presets'
+import type { ActivityPreset } from '@/lib/presets'
+import { calculateAge } from '@/lib/age'
 
 export default function ProfileEditPage() {
   const { user, profile } = useAuth()
@@ -20,6 +23,11 @@ export default function ProfileEditPage() {
   const [city, setCity] = useState('')
   const [country, setCountry] = useState('')
   const [bio, setBio] = useState('')
+
+  // アクティビティタイプ（選手向け・自己設定）
+  const [activityPreset, setActivityPreset] = useState<ActivityPreset>('running')
+  // コーチ既定プリセット（新規選手に適用）
+  const [defaultActivityPreset, setDefaultActivityPreset] = useState<ActivityPreset>('running')
 
   // ランニング設定（選手向け）
   const [thresholdHr, setThresholdHr] = useState('')
@@ -47,6 +55,8 @@ export default function ProfileEditPage() {
     setCity(profile.city ?? '')
     setCountry(profile.country ?? '')
     setBio(profile.bio ?? '')
+    setActivityPreset((profile.activityPreset as ActivityPreset) ?? 'running')
+    setDefaultActivityPreset((profile.defaultActivityPreset as ActivityPreset) ?? 'running')
     setThresholdHr(profile.thresholdHr?.toString() ?? '')
     setMaxHr(profile.maxHr?.toString() ?? '')
     setRestingHr(profile.restingHr?.toString() ?? '')
@@ -67,6 +77,7 @@ export default function ProfileEditPage() {
         city: city || null,
         country: country || null,
         bio: bio || null,
+        ...(profile?.role === 'athlete' ? { activityPreset } : { defaultActivityPreset }),
         thresholdHr: thresholdHr ? parseInt(thresholdHr) : null,
         maxHr: maxHr ? parseInt(maxHr) : null,
         restingHr: restingHr ? parseInt(restingHr) : null,
@@ -143,7 +154,7 @@ export default function ProfileEditPage() {
                 <option value="other">その他</option>
               </select>
             </Field>
-            <Field label="生年月日">
+            <Field label={`生年月日${calculateAge(birthDate) != null ? `（${calculateAge(birthDate)}歳）` : ''}`}>
               <input
                 type="date"
                 value={birthDate}
@@ -202,8 +213,57 @@ export default function ProfileEditPage() {
           </Field>
         </div>
 
-        {/* ランニング設定（選手向け） */}
+        {/* アクティビティタイプ（選手向け） */}
         {profile?.role === 'athlete' && (
+          <div className="rounded-xl border border-slate-800 bg-slate-900 p-6 space-y-3">
+            <h2 className="text-base font-semibold text-white">アクティビティタイプ</h2>
+            <p className="text-xs text-slate-400">
+              取り組む活動に合わせて、記録項目・指標・AIメニューの内容が切り替わります
+            </p>
+            <Field label="タイプ">
+              <select
+                value={activityPreset}
+                onChange={(e) => setActivityPreset(e.target.value as ActivityPreset)}
+                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+              >
+                {presetOptions().map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <p className="text-xs text-slate-500">{getPreset(activityPreset).description}</p>
+          </div>
+        )}
+
+        {/* 既定アクティビティタイプ（コーチ向け） */}
+        {profile?.role === 'coach' && (
+          <div className="rounded-xl border border-slate-800 bg-slate-900 p-6 space-y-3">
+            <h2 className="text-base font-semibold text-white">既定アクティビティタイプ</h2>
+            <p className="text-xs text-slate-400">
+              招待リンクから新しく参加した選手に、最初に適用されるタイプです（後から選手ごとに変更できます）
+            </p>
+            <Field label="既定タイプ">
+              <select
+                value={defaultActivityPreset}
+                onChange={(e) => setDefaultActivityPreset(e.target.value as ActivityPreset)}
+                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+              >
+                {presetOptions().map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <p className="text-xs text-slate-500">{getPreset(defaultActivityPreset).description}</p>
+          </div>
+        )}
+
+        {/* ランニング設定（選手向け・プリセット対応） */}
+        {profile?.role === 'athlete' &&
+          (getPreset(activityPreset).showRunningMetrics || getPreset(activityPreset).showHrZones) && (
           <div className="rounded-xl border border-slate-800 bg-slate-900 p-6 space-y-4">
             <h2 className="text-base font-semibold text-white">ランニング設定</h2>
             <p className="text-xs text-slate-400">
@@ -262,7 +322,9 @@ export default function ProfileEditPage() {
             </div>
 
             {/* テスト計算機 */}
-            <TestCalculator onApply={applyTestResult} />
+            {getPreset(activityPreset).showTestCalculator && (
+              <TestCalculator onApply={applyTestResult} />
+            )}
 
             {/* 心拍ゾーン自動表示 */}
             {hrZones && (

@@ -1,4 +1,7 @@
 import { Timestamp } from 'firebase/firestore'
+import type { ActivityPreset } from '@/lib/presets/types'
+
+export type { ActivityPreset } from '@/lib/presets/types'
 
 // ============================================================
 // ユーザー・ロール
@@ -73,6 +76,12 @@ export interface UserProfile {
   createdAt: Timestamp
   /** コーチングプラン（選手のみ。コーチが設定） */
   plan?: AthletePlan | null
+  /** アクティビティプリセット（選手の実効値。未設定は running 扱い） */
+  activityPreset?: ActivityPreset | null
+  /** コーチが新規選手に適用する既定プリセット（コーチのみ） */
+  defaultActivityPreset?: ActivityPreset | null
+  /** 管理者フラグ（運営者のみ。全ユーザー情報を閲覧可能） */
+  isAdmin?: boolean | null
 
   // ===== 拡張フィールド =====
   /** 性別 */
@@ -130,6 +139,8 @@ export interface AthleteCache {
   weeklyStats: WeeklyStats | null
   /** コーチングプラン */
   plan?: AthletePlan | null
+  /** アクティビティプリセット（コーチダッシュボード用にデノーマライズ） */
+  activityPreset?: ActivityPreset | null
 }
 
 export interface LatestMetrics {
@@ -214,6 +225,10 @@ export interface CompletedWorkout {
   polyline?: string | null
   startLatLng?: [number, number] | null
   endLatLng?: [number, number] | null
+  /** プリセット固有の追加指標（MetricDef.key で格納。例: weightKg, bodyFatPct, rpe） */
+  metrics?: Record<string, number | string | null>
+  /** このワークアウトを記録したプリセット（後の表示・分析用） */
+  activityPreset?: ActivityPreset | null
 }
 
 export interface CoachFeedback {
@@ -649,13 +664,14 @@ export type NotificationType =
   | 'workout_logged'
   | 'chat_message'
   | 'wellness_logged'
+  | 'birthday'
 
 export interface Notification {
   id: string
   recipientId: string
   senderId: string
   type: NotificationType
-  relatedEntityType: 'workout' | 'strengthAssignment' | 'annotation' | 'chat' | 'wellness'
+  relatedEntityType: 'workout' | 'strengthAssignment' | 'annotation' | 'chat' | 'wellness' | 'system'
   relatedEntityId: string
   title: string
   body: string

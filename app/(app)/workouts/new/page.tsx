@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
@@ -8,56 +8,98 @@ import { Timestamp } from 'firebase/firestore'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { TopBar } from '@/components/layout/TopBar'
 import { createCompletedWorkout } from '@/lib/firebase/firestore'
-import { WORKOUT_TYPE_LABELS, type WorkoutType } from '@/types'
+import type { CompletedWorkout, WorkoutType } from '@/types'
+import { getPreset, sessionLabel } from '@/lib/presets'
+import type { MetricDef } from '@/lib/presets'
 
 export default function NewWorkoutPage() {
   const router = useRouter()
   const { user, profile } = useAuth()
 
+  const preset = useMemo(() => getPreset(profile?.activityPreset), [profile?.activityPreset])
+
   const today = new Date().toISOString().split('T')[0]
   const [date, setDate] = useState(today)
   const [title, setTitle] = useState('')
-  const [workoutType, setWorkoutType] = useState<WorkoutType>('easy_run')
-  const [distance, setDistance] = useState('')
-  const [duration, setDuration] = useState('')
-  const [pace, setPace] = useState('')
-  const [avgHr, setAvgHr] = useState('')
-  const [maxHr, setMaxHr] = useState('')
-  const [elevation, setElevation] = useState('')
+  const [workoutType, setWorkoutType] = useState<WorkoutType>(preset.defaultSessionType)
+  // プリセット指標の入力値（MetricDef.key ごと）
+  const [values, setValues] = useState<Record<string, string>>({})
+  // トレーニングロード（showTss プリセットのみ）
   const [tss, setTss] = useState('')
   const [ctl, setCtl] = useState('')
   const [atl, setAtl] = useState('')
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
+  // プリセット確定（プロフィール読込後）に既定セッション種別へ同期。
+  // 現在の選択がプリセットに存在しない場合のみ既定へ戻す（入力中の手動選択を保持）。
+  useEffect(() => {
+    setWorkoutType((cur) =>
+      preset.sessionTypes.some((s) => s.key === cur) ? cur : preset.defaultSessionType
+    )
+  }, [preset])
+
+  const setMetric = (key: string, v: string) =>
+    setValues((prev) => ({ ...prev, [key]: v }))
+
+  const primaryMetrics = preset.metrics.filter((m) => m.primary)
+  const secondaryMetrics = preset.metrics.filter((m) => !m.primary)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user || !profile) return
     setSubmitting(true)
     try {
+      // ベースとなる typed フィールド（全て null）
+      const completed: CompletedWorkout = {
+        title: title || sessionLabel(preset.id, workoutType),
+        workoutType,
+        distanceKm: null,
+        durationMin: null,
+        avgPaceMinPerKm: null,
+        avgHeartRate: null,
+        maxHeartRate: null,
+        elevationGainM: null,
+        calories: null,
+        tss: null,
+        ctl: null,
+        atl: null,
+        notes,
+        loggedAt: Timestamp.now(),
+        attachedImages: [],
+        activityPreset: preset.id,
+      }
+      const extraMetrics: Record<string, number | string | null> = {}
+
+      for (const m of preset.metrics) {
+        const raw = values[m.key]?.trim()
+        if (!raw) continue
+        const val: number | string = m.inputType === 'number' ? parseFloat(raw) : raw
+        if (typeof val === 'number' && Number.isNaN(val)) continue
+        if (m.field.startsWith('metrics.')) {
+          extraMetrics[m.field.slice('metrics.'.length)] = val
+        } else {
+          // 既存 typed フィールドへ
+          ;(completed as unknown as Record<string, unknown>)[m.field] = val
+        }
+      }
+
+      if (Object.keys(extraMetrics).length > 0) completed.metrics = extraMetrics
+
+      // トレーニングロード（プリセットが許可する場合のみ）
+      if (preset.showTss) {
+        completed.tss = tss ? parseFloat(tss) : null
+        completed.ctl = ctl ? parseFloat(ctl) : null
+        completed.atl = atl ? parseFloat(atl) : null
+      }
+
       await createCompletedWorkout({
         athleteId: user.uid,
         coachId: profile.coachId ?? '',
         date,
         type: 'completed',
         planned: null,
-        completed: {
-          title: title || WORKOUT_TYPE_LABELS[workoutType],
-          workoutType,
-          distanceKm: distance ? parseFloat(distance) : null,
-          durationMin: duration ? parseInt(duration) : null,
-          avgPaceMinPerKm: pace || null,
-          avgHeartRate: avgHr ? parseInt(avgHr) : null,
-          maxHeartRate: maxHr ? parseInt(maxHr) : null,
-          elevationGainM: elevation ? parseInt(elevation) : null,
-          calories: null,
-          tss: tss ? parseFloat(tss) : null,
-          ctl: ctl ? parseFloat(ctl) : null,
-          atl: atl ? parseFloat(atl) : null,
-          notes,
-          loggedAt: Timestamp.now(),
-          attachedImages: [],
-        },
+        completed,
         coachFeedback: null,
       })
       router.replace('/calendar')
@@ -105,52 +147,52 @@ export default function NewWorkoutPage() {
               onChange={(e) => setWorkoutType(e.target.value as WorkoutType)}
               className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
             >
-              {Object.entries(WORKOUT_TYPE_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
+              {preset.sessionTypes.map((s) => (
+                <option key={s.key} value={s.key}>{s.label}</option>
               ))}
             </select>
           </Field>
 
-          <div className="grid grid-cols-3 gap-3">
-            <Field label="距離(km)">
-              <Input value={distance} onChange={setDistance} type="number" step="0.01" />
-            </Field>
-            <Field label="時間(分)">
-              <Input value={duration} onChange={setDuration} type="number" />
-            </Field>
-            <Field label="ペース(分:秒/km)">
-              <Input value={pace} onChange={setPace} placeholder="5:30" />
-            </Field>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            <Field label="平均HR">
-              <Input value={avgHr} onChange={setAvgHr} type="number" />
-            </Field>
-            <Field label="最大HR">
-              <Input value={maxHr} onChange={setMaxHr} type="number" />
-            </Field>
-            <Field label="獲得標高(m)">
-              <Input value={elevation} onChange={setElevation} type="number" />
-            </Field>
-          </div>
-
-          <div className="border-t border-slate-800 pt-4">
-            <p className="mb-3 text-xs font-medium text-slate-400">
-              トレーニングロード（Garmin Connectなどから）
-            </p>
+          {/* 主指標 */}
+          {primaryMetrics.length > 0 && (
             <div className="grid grid-cols-3 gap-3">
-              <Field label="TSS">
-                <Input value={tss} onChange={setTss} type="number" step="0.1" />
-              </Field>
-              <Field label="CTL">
-                <Input value={ctl} onChange={setCtl} type="number" step="0.1" />
-              </Field>
-              <Field label="ATL">
-                <Input value={atl} onChange={setAtl} type="number" step="0.1" />
-              </Field>
+              {primaryMetrics.map((m) => (
+                <MetricField key={m.key} metric={m} value={values[m.key] ?? ''} onChange={setMetric} />
+              ))}
             </div>
-          </div>
+          )}
+
+          {/* 詳細指標 */}
+          {secondaryMetrics.length > 0 && (
+            <div className="border-t border-slate-800 pt-4">
+              <p className="mb-3 text-xs font-medium text-slate-400">詳細</p>
+              <div className="grid grid-cols-3 gap-3">
+                {secondaryMetrics.map((m) => (
+                  <MetricField key={m.key} metric={m} value={values[m.key] ?? ''} onChange={setMetric} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* トレーニングロード（プリセット対応） */}
+          {preset.showTss && (
+            <div className="border-t border-slate-800 pt-4">
+              <p className="mb-3 text-xs font-medium text-slate-400">
+                トレーニングロード（Garmin Connectなどから）
+              </p>
+              <div className="grid grid-cols-3 gap-3">
+                <Field label="TSS">
+                  <Input value={tss} onChange={setTss} type="number" step="0.1" />
+                </Field>
+                <Field label="CTL">
+                  <Input value={ctl} onChange={setCtl} type="number" step="0.1" />
+                </Field>
+                <Field label="ATL">
+                  <Input value={atl} onChange={setAtl} type="number" step="0.1" />
+                </Field>
+              </div>
+            </div>
+          )}
 
           <Field label="メモ">
             <textarea
@@ -171,6 +213,29 @@ export default function NewWorkoutPage() {
         </form>
       </div>
     </>
+  )
+}
+
+function MetricField({
+  metric,
+  value,
+  onChange,
+}: {
+  metric: MetricDef
+  value: string
+  onChange: (key: string, v: string) => void
+}) {
+  const label = metric.unit ? `${metric.label}(${metric.unit})` : metric.label
+  return (
+    <Field label={label}>
+      {metric.inputType === 'pace' ? (
+        <Input value={value} onChange={(v) => onChange(metric.key, v)} placeholder="5:30" />
+      ) : metric.inputType === 'number' ? (
+        <Input value={value} onChange={(v) => onChange(metric.key, v)} type="number" step={metric.step} />
+      ) : (
+        <Input value={value} onChange={(v) => onChange(metric.key, v)} />
+      )}
+    </Field>
   )
 }
 

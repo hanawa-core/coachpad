@@ -16,8 +16,22 @@ import { getPhaseForDate } from '@/lib/race-phase'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { getUserProfile } from '@/lib/firebase/firestore'
 import type { Workout, StrengthAssignment, TargetRace, UserProfile } from '@/types'
+import { sessionLabel } from '@/lib/presets'
 import { Trophy } from 'lucide-react'
 import { clsx } from 'clsx'
+
+/** 実績の指標サマリー文字列（ランニング指標 + 体組成指標を汎用表示） */
+function workoutSummary(c: Workout['completed']): string | null {
+  if (!c) return null
+  const parts: string[] = []
+  if (c.distanceKm != null) parts.push(`${c.distanceKm}km`)
+  if (c.durationMin != null) parts.push(`${c.durationMin}分`)
+  if (c.avgPaceMinPerKm) parts.push(`${c.avgPaceMinPerKm}/km`)
+  const weight = c.metrics?.weightKg
+  if (weight != null) parts.push(`${weight}kg`)
+  if (c.calories != null) parts.push(`${c.calories}kcal`)
+  return parts.length > 0 ? parts.join(' · ') : null
+}
 
 type DragData =
   | { type: 'workout'; id: string; date: string }
@@ -470,12 +484,12 @@ function DayView(props: Pick<ViewProps, 'focalDate' | 'races' | 'todayStr' | 'wo
                     'flex h-10 w-10 items-center justify-center rounded-lg text-[11px] font-bold shrink-0',
                     isRest ? 'bg-blue-500/20 text-blue-300' : 'bg-emerald-500/20 text-emerald-300'
                   )}>
-                    {isRest ? '休' : 'ラン'}
+                    {isRest ? '休' : '練'}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <h3 className="text-sm font-semibold text-white truncate">
-                        {w.planned?.title ?? w.completed?.title ?? 'ラン'}
+                        {w.planned?.title ?? w.completed?.title ?? sessionLabel(w.completed?.activityPreset, w.planned?.workoutType ?? w.completed?.workoutType ?? 'other')}
                       </h3>
                       {showAchievement && dayAchievement && (
                         <span className={clsx('text-xs font-bold shrink-0', dayAchievement.colorClass.split(' ')[0])}>
@@ -483,12 +497,8 @@ function DayView(props: Pick<ViewProps, 'focalDate' | 'races' | 'todayStr' | 'wo
                         </span>
                       )}
                     </div>
-                    {w.completed?.distanceKm != null && (
-                      <p className="mt-0.5 text-xs text-slate-400">
-                        {w.completed.distanceKm}km
-                        {w.completed.durationMin != null && ` · ${w.completed.durationMin}分`}
-                        {w.completed.avgPaceMinPerKm && ` · ${w.completed.avgPaceMinPerKm}/km`}
-                      </p>
+                    {workoutSummary(w.completed) && (
+                      <p className="mt-0.5 text-xs text-slate-400">{workoutSummary(w.completed)}</p>
                     )}
                     {showAchievement && dayAchievement && dayAchievement.actual !== w.completed?.distanceKm && dayAchievement.actual !== w.completed?.durationMin && (
                       <p className="mt-0.5 text-[10px] text-emerald-400">
@@ -643,7 +653,7 @@ function DayCell({
                     {showAchievement && dayAchievement && (
                       <span className="inline-block mr-1 font-bold">{dayAchievement.percent}%</span>
                     )}
-                    <span className="opacity-70">[{isRest ? '休' : 'ラン'}]</span> {w.planned?.title ?? w.completed?.title ?? 'ラン'}
+                    <span className="opacity-70">[{isRest ? '休' : '練'}]</span> {w.planned?.title ?? w.completed?.title ?? sessionLabel(w.completed?.activityPreset, wType ?? 'other')}
                   </Link>
                 )
               })

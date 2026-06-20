@@ -168,7 +168,7 @@ export async function createPlannedWorkout(data: Omit<Workout, 'id' | 'createdAt
       type: 'workout_assigned',
       relatedEntityType: 'workout',
       relatedEntityId: ref.id,
-      title: '🏃 新しいランニングメニューが追加されました',
+      title: '📋 新しいメニューが追加されました',
       body: `${data.date}: ${data.planned?.title ?? ''}`,
     })
   }
@@ -195,7 +195,7 @@ export async function logCompletedWorkout(
         type: 'workout_logged',
         relatedEntityType: 'workout',
         relatedEntityId: workoutId,
-        title: '🏃 選手がランニングを完了しました',
+        title: '✅ 選手がメニューを完了しました',
         body: `${w.date}: ${completed?.title ?? w.planned?.title ?? ''}`,
       })
     }
@@ -217,7 +217,7 @@ export async function createCompletedWorkout(data: Omit<Workout, 'id' | 'created
       type: 'workout_logged',
       relatedEntityType: 'workout',
       relatedEntityId: ref.id,
-      title: '🏃 選手がランニングを記録しました',
+      title: '✅ 選手がワークアウトを記録しました',
       body: `${data.date}: ${data.completed?.title ?? ''}`,
     })
   }

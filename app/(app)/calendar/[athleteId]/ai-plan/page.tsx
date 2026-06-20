@@ -12,7 +12,8 @@ import {
   createPlannedWorkout,
   createStrengthAssignment,
 } from '@/lib/firebase/firestore'
-import { WORKOUT_TYPE_LABELS, type AthleteCache, type WorkoutType } from '@/types'
+import { type AthleteCache, type WorkoutType } from '@/types'
+import { getPreset, sessionLabel } from '@/lib/presets'
 
 interface StrengthExerciseItem {
   libraryExerciseId: string | null
@@ -109,6 +110,7 @@ export default function AIPlanPage() {
           raceDistance: raceDistance || null,
           currentFitness,
           notes,
+          activityPreset: athlete.activityPreset ?? 'running',
         }),
       })
       const data = await res.json()
@@ -224,7 +226,9 @@ export default function AIPlanPage() {
         <div className="rounded-xl border border-purple-700/50 bg-purple-950/20 p-6">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="h-5 w-5 text-purple-400" />
-            <h2 className="text-base font-semibold text-white">AIでランニングプラン作成</h2>
+            <h2 className="text-base font-semibold text-white">
+              AIで{getPreset(athlete?.activityPreset).label}プラン作成
+            </h2>
           </div>
           <p className="text-sm text-slate-400 mb-4">
             選手のCTL・プロフィール・Wellnessデータは自動取得されます。種目ライブラリも自動で反映されます。
@@ -261,27 +265,31 @@ export default function AIPlanPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-300">目標レース日（任意）</label>
-                <input
-                  type="date"
-                  value={raceDate}
-                  onChange={(e) => setRaceDate(e.target.value)}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
-                />
+            {getPreset(athlete?.activityPreset).showRacePhasing && (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-300">
+                    目標{getPreset(athlete?.activityPreset).aiGoalNoun}日（任意）
+                  </label>
+                  <input
+                    type="date"
+                    value={raceDate}
+                    onChange={(e) => setRaceDate(e.target.value)}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-300">距離・種目（任意）</label>
+                  <input
+                    type="text"
+                    value={raceDistance}
+                    onChange={(e) => setRaceDistance(e.target.value)}
+                    placeholder="例: 100km トレイル"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-300">レース距離（任意）</label>
-                <input
-                  type="text"
-                  value={raceDistance}
-                  onChange={(e) => setRaceDistance(e.target.value)}
-                  placeholder="例: 100km トレイル"
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
-                />
-              </div>
-            </div>
+            )}
 
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-300">
@@ -389,7 +397,7 @@ export default function AIPlanPage() {
                                   ? 'bg-blue-800/50 text-blue-300'
                                   : 'bg-yellow-800/50 text-yellow-300'
                             }`}>
-                              {isStrength ? '💪 筋トレ' : WORKOUT_TYPE_LABELS[w.workoutType]}
+                              {isStrength ? '💪 筋トレ' : sessionLabel(getPreset(athlete?.activityPreset).id, w.workoutType)}
                             </span>
                           </div>
                           <p className="mt-1 text-xs text-slate-400">

@@ -10,10 +10,12 @@ import { TopBar } from '@/components/layout/TopBar'
 import { getAthleteCache, setAthletePlan } from '@/lib/firebase/firestore'
 import { CalendarMonthView } from '@/components/calendar/CalendarMonthView'
 import { FitnessChart } from '@/components/dashboard/FitnessChart'
+import { WeightTrendCard } from '@/components/dashboard/WeightTrendCard'
 import { WellnessChart } from '@/components/wellness/WellnessChart'
 import { PlanBadge } from '@/components/ui/PlanBadge'
 import { RunningSettingsPanel } from '@/components/athletes/RunningSettingsPanel'
 import { PLAN_CONFIG, type AthleteCache, type AthletePlan } from '@/types'
+import { presetOptions, getPreset, type ActivityPreset } from '@/lib/presets'
 
 export default function AthleteDetailPage() {
   const params = useParams()
@@ -21,10 +23,29 @@ export default function AthleteDetailPage() {
   const { profile } = useAuth()
   const [athlete, setAthlete] = useState<AthleteCache | null>(null)
   const [planSaving, setPlanSaving] = useState(false)
+  const [presetSaving, setPresetSaving] = useState(false)
 
   useEffect(() => {
     getAthleteCache(id).then(setAthlete)
   }, [id])
+
+  async function handlePresetChange(activityPreset: ActivityPreset) {
+    if (!athlete) return
+    setPresetSaving(true)
+    try {
+      const idToken = await getAuth().currentUser?.getIdToken()
+      if (idToken) {
+        await fetch('/api/athletes/set-preset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+          body: JSON.stringify({ athleteId: id, activityPreset }),
+        })
+      }
+      setAthlete((prev) => (prev ? { ...prev, activityPreset } : prev))
+    } finally {
+      setPresetSaving(false)
+    }
+  }
 
   async function handlePlanChange(plan: AthletePlan | null) {
     if (!athlete) return
@@ -107,11 +128,33 @@ export default function AthleteDetailPage() {
               )}
             </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-4 text-center">
-              <Stat label="CTL" value={athlete.latestMetrics?.ctl?.toFixed(0) ?? '-'} />
-              <Stat label="ATL" value={athlete.latestMetrics?.atl?.toFixed(0) ?? '-'} />
-              <Stat label="TSB" value={athlete.latestMetrics?.tsb?.toFixed(0) ?? '-'} />
+            {/* アクティビティタイプセレクター */}
+            <div className="mt-4">
+              <p className="mb-2 text-xs font-medium text-slate-400">アクティビティタイプ</p>
+              <select
+                value={(athlete.activityPreset as ActivityPreset) ?? 'running'}
+                onChange={(e) => handlePresetChange(e.target.value as ActivityPreset)}
+                disabled={presetSaving}
+                className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs text-white disabled:opacity-50"
+              >
+                {presetOptions().map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-xs text-slate-500">
+                {getPreset(athlete.activityPreset as ActivityPreset).description}
+              </p>
             </div>
+
+            {getPreset(athlete.activityPreset as ActivityPreset).showTss && (
+              <div className="mt-4 grid grid-cols-3 gap-4 text-center">
+                <Stat label="CTL" value={athlete.latestMetrics?.ctl?.toFixed(0) ?? '-'} />
+                <Stat label="ATL" value={athlete.latestMetrics?.atl?.toFixed(0) ?? '-'} />
+                <Stat label="TSB" value={athlete.latestMetrics?.tsb?.toFixed(0) ?? '-'} />
+              </div>
+            )}
 
             <div className="mt-4 flex flex-wrap gap-2">
               <Link
@@ -132,9 +175,17 @@ export default function AthleteDetailPage() {
           </div>
         )}
 
-        <RunningSettingsPanel athleteId={id} />
+        {athlete && getPreset(athlete.activityPreset as ActivityPreset).showRunningMetrics && (
+          <RunningSettingsPanel athleteId={id} />
+        )}
 
-        <FitnessChart athleteId={id} />
+        {athlete && getPreset(athlete.activityPreset as ActivityPreset).showTss && (
+          <FitnessChart athleteId={id} />
+        )}
+
+        {athlete && getPreset(athlete.activityPreset as ActivityPreset).primaryChart === 'weight' && (
+          <WeightTrendCard athleteId={id} coachId={profile?.uid} />
+        )}
 
         <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
           <h3 className="mb-3 text-base font-semibold text-white">体調推移（30日）</h3>
