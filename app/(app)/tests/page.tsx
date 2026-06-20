@@ -165,14 +165,14 @@ export default function InitialTestsPage() {
 
   return (
     <>
-      <TopBar title="初期テストガイド" />
+      <TopBar title="テスト" />
       <div className="p-4 sm:p-6 max-w-2xl space-y-4">
         <Link
-          href="/settings"
+          href="/dashboard"
           className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white"
         >
           <ArrowLeft className="h-4 w-4" />
-          設定に戻る
+          ダッシュボードに戻る
         </Link>
 
         {/* イントロ */}
@@ -229,6 +229,11 @@ export default function InitialTestsPage() {
                       unit={t.unit}
                       betterWhenLower={t.betterWhenLower}
                     />
+                    {(profile?.testHistory?.[t.key]?.length ?? 0) === 1 && (
+                      <p className="mt-1 text-xs text-slate-500">
+                        あと1回（別の日に）記録すると推移グラフが表示されます
+                      </p>
+                    )}
                   </div>
                 )
               })}

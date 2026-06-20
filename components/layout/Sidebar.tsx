@@ -16,6 +16,7 @@ import {
   Heart,
   MessageCircle,
   Shield,
+  ClipboardCheck,
 } from 'lucide-react'
 import { subscribeChatThreads, computeUnreadCount } from '@/lib/firebase/firestore'
 import { useAuth } from '@/components/providers/AuthProvider'
@@ -39,6 +40,7 @@ const athleteNav = [
   { href: '/dashboard', label: 'ダッシュボード', icon: LayoutDashboard },
   { href: '/calendar', label: 'カレンダー', icon: Calendar },
   { href: '/wellness', label: 'Wellness', icon: Heart },
+  { href: '/tests', label: 'テスト', icon: ClipboardCheck },
   { href: '/motion', label: '動作分析', icon: Video },
   { href: '/chat', label: 'チャット', icon: MessageCircle, badge: 'chat' as const },
   { href: '/notifications', label: '通知', icon: Bell },

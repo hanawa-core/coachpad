@@ -82,7 +82,7 @@ export default function SettingsPage() {
         {profile?.role === 'athlete' &&
           (preset.showTestCalculator || (profile?.assignedTests?.length ?? 0) > 0) && (
           <Link
-            href="/settings/tests"
+            href="/tests"
             className="flex items-center justify-between rounded-xl border border-purple-700/50 bg-purple-950/20 p-6 hover:bg-purple-950/30 transition-colors"
           >
             <div className="flex items-center gap-3">
