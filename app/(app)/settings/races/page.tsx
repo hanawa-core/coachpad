@@ -102,7 +102,7 @@ export default function RacesPage() {
             <h2 className="text-base font-semibold text-white">ターゲットレース管理</h2>
           </div>
           <p className="text-sm text-slate-300">
-            登録したレースは選手のカレンダーで強調表示され、AIメニュー生成時にピーキング理論が自動適用されます。
+            登録したレースは選手のカレンダーで強調表示され、メニュー作成時にピーキング理論が反映されます。
           </p>
           <ul className="mt-2 text-xs text-slate-400 space-y-0.5">
             <li>🟢 <strong>ボリューム期</strong>（レース42日以上前）: ベース構築・有酸素能力向上</li>

@@ -218,7 +218,7 @@ export default function ProfileEditPage() {
           <div className="rounded-xl border border-slate-800 bg-slate-900 p-6 space-y-3">
             <h2 className="text-base font-semibold text-white">アクティビティタイプ</h2>
             <p className="text-xs text-slate-400">
-              取り組む活動に合わせて、記録項目・指標・AIメニューの内容が切り替わります
+              取り組む活動に合わせて、記録項目・指標・メニューの内容が切り替わります
             </p>
             <Field label="タイプ">
               <select
@@ -267,7 +267,7 @@ export default function ProfileEditPage() {
           <div className="rounded-xl border border-slate-800 bg-slate-900 p-6 space-y-4">
             <h2 className="text-base font-semibold text-white">ランニング設定</h2>
             <p className="text-xs text-slate-400">
-              閾値心拍を入力すると、AIが自動で5ゾーンを計算してメニューに反映します
+              閾値心拍を入力すると、自動で5ゾーンを計算してメニューに反映します
             </p>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
