@@ -127,19 +127,19 @@ function UserTable({ title, users }: { title: string; users: AdminUserRow[] }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-800 text-left text-xs text-slate-500">
-              <th className="px-4 py-2 font-medium">名前</th>
-              <th className="px-4 py-2 font-medium">年齢</th>
-              <th className="px-4 py-2 font-medium">メール</th>
-              <th className="px-4 py-2 font-medium">コーチ</th>
-              <th className="px-4 py-2 font-medium">タイプ</th>
-              <th className="px-4 py-2 font-medium">プラン</th>
-              <th className="px-4 py-2 font-medium">CTL/ATL/TSB</th>
+              <th className="whitespace-nowrap px-4 py-2 font-medium">名前</th>
+              <th className="whitespace-nowrap px-4 py-2 font-medium">年齢</th>
+              <th className="whitespace-nowrap px-4 py-2 font-medium">メール</th>
+              <th className="whitespace-nowrap px-4 py-2 font-medium">コーチ</th>
+              <th className="whitespace-nowrap px-4 py-2 font-medium">タイプ</th>
+              <th className="whitespace-nowrap px-4 py-2 font-medium">プラン</th>
+              <th className="whitespace-nowrap px-4 py-2 font-medium">CTL/ATL/TSB</th>
             </tr>
           </thead>
           <tbody>
             {users.map((u) => (
               <tr key={u.uid} className="border-b border-slate-800/50 hover:bg-slate-800/40">
-                <td className="px-4 py-2.5">
+                <td className="whitespace-nowrap px-4 py-2.5">
                   <Link href={`/admin/users/${u.uid}`} className="font-medium text-emerald-400 hover:underline">
                     {u.displayName || '(無名)'}
                   </Link>
@@ -147,16 +147,16 @@ function UserTable({ title, users }: { title: string; users: AdminUserRow[] }) {
                     <span className="ml-2 rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] text-amber-300">管理者</span>
                   )}
                 </td>
-                <td className="px-4 py-2.5 text-slate-400">
+                <td className="whitespace-nowrap px-4 py-2.5 text-slate-400">
                   {calculateAge(u.birthDate) != null ? `${calculateAge(u.birthDate)}歳` : '-'}
                 </td>
-                <td className="px-4 py-2.5 text-slate-400">{u.email}</td>
-                <td className="px-4 py-2.5 text-slate-400">{u.coachName ?? '-'}</td>
-                <td className="px-4 py-2.5 text-slate-300">
+                <td className="whitespace-nowrap px-4 py-2.5 text-slate-400">{u.email}</td>
+                <td className="whitespace-nowrap px-4 py-2.5 text-slate-400">{u.coachName ?? '-'}</td>
+                <td className="whitespace-nowrap px-4 py-2.5 text-slate-300">
                   {u.role === 'athlete' ? getPreset(u.activityPreset as never).label : '-'}
                 </td>
-                <td className="px-4 py-2.5 text-slate-400">{u.plan ?? '-'}</td>
-                <td className="px-4 py-2.5 text-slate-400">
+                <td className="whitespace-nowrap px-4 py-2.5 text-slate-400">{u.plan ?? '-'}</td>
+                <td className="whitespace-nowrap px-4 py-2.5 text-slate-400">
                   {u.latestMetrics
                     ? `${u.latestMetrics.ctl?.toFixed(0)} / ${u.latestMetrics.atl?.toFixed(0)} / ${u.latestMetrics.tsb?.toFixed(0)}`
                     : '-'}

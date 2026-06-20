@@ -267,7 +267,7 @@ function SimpleTable({ headers, rows }: { headers: string[]; rows: (string | num
         <thead>
           <tr className="border-b border-slate-800 text-left text-xs text-slate-500">
             {headers.map((h) => (
-              <th key={h} className="px-2 py-1.5 font-medium">{h}</th>
+              <th key={h} className="whitespace-nowrap px-2 py-1.5 font-medium">{h}</th>
             ))}
           </tr>
         </thead>
@@ -275,7 +275,7 @@ function SimpleTable({ headers, rows }: { headers: string[]; rows: (string | num
           {rows.map((row, i) => (
             <tr key={i} className="border-b border-slate-800/50">
               {row.map((cell, j) => (
-                <td key={j} className="px-2 py-1.5 text-slate-300 break-all">{cell}</td>
+                <td key={j} className="max-w-[14rem] truncate px-2 py-1.5 text-slate-300">{cell}</td>
               ))}
             </tr>
           ))}

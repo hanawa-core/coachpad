@@ -141,7 +141,7 @@ export default function ProfileEditPage() {
             />
           </Field>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <Field label="性別">
               <select
                 value={sex}
@@ -173,7 +173,7 @@ export default function ProfileEditPage() {
             </Field>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <Field label="体重(kg)">
               <input
                 type="number"
@@ -270,7 +270,7 @@ export default function ProfileEditPage() {
               閾値心拍を入力すると、AIが自動で5ゾーンを計算してメニューに反映します
             </p>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <Field label="閾値心拍 LTHR">
                 <input
                   type="number"

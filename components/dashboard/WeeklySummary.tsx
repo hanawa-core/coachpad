@@ -55,7 +55,7 @@ export function WeeklySummary({ athleteId }: Props) {
         週間サマリー
       </h2>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
         <Stat
           icon={Calendar}
           label="セッション"
@@ -105,7 +105,7 @@ export function WeeklySummary({ athleteId }: Props) {
         {preset.primaryChart === 'weight' && stats.thisWeek.calories > 0 && (
           <Stat
             icon={Flame}
-            label="消費カロリー"
+            label="カロリー"
             value={`${Math.round(stats.thisWeek.calories)}`}
             unit="kcal"
             delta={Math.round(stats.thisWeek.calories - stats.lastWeek.calories)}
@@ -114,7 +114,7 @@ export function WeeklySummary({ athleteId }: Props) {
         {preset.primaryChart === 'weight' && stats.thisWeek.weightLatest != null && (
           <Stat
             icon={Scale}
-            label="体重(直近)"
+            label="体重"
             value={`${stats.thisWeek.weightLatest}`}
             unit="kg"
             delta={
@@ -151,9 +151,9 @@ function Stat({
   const neutral = delta === 0
   return (
     <div className="rounded-lg bg-slate-950 p-3">
-      <div className="flex items-center gap-1.5 mb-1">
-        <Icon className="h-3.5 w-3.5 text-slate-500" />
-        <span className="text-xs text-slate-500">{label}</span>
+      <div className="flex items-center gap-1.5 mb-1 min-w-0">
+        <Icon className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+        <span className="truncate text-xs text-slate-500">{label}</span>
       </div>
       <p className="text-xl font-bold text-white">
         {value}

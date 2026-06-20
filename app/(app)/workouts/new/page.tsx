@@ -155,7 +155,7 @@ export default function NewWorkoutPage() {
 
           {/* 主指標 */}
           {primaryMetrics.length > 0 && (
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {primaryMetrics.map((m) => (
                 <MetricField key={m.key} metric={m} value={values[m.key] ?? ''} onChange={setMetric} />
               ))}
@@ -166,7 +166,7 @@ export default function NewWorkoutPage() {
           {secondaryMetrics.length > 0 && (
             <div className="border-t border-slate-800 pt-4">
               <p className="mb-3 text-xs font-medium text-slate-400">詳細</p>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {secondaryMetrics.map((m) => (
                   <MetricField key={m.key} metric={m} value={values[m.key] ?? ''} onChange={setMetric} />
                 ))}
@@ -180,7 +180,7 @@ export default function NewWorkoutPage() {
               <p className="mb-3 text-xs font-medium text-slate-400">
                 トレーニングロード（Garmin Connectなどから）
               </p>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <Field label="TSS">
                   <Input value={tss} onChange={setTss} type="number" step="0.1" />
                 </Field>
