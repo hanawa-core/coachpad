@@ -78,8 +78,9 @@ export default function SettingsPage() {
           </>
         )}
 
-        {/* 初期テストガイド（選手のみ・ランニング系プリセット） */}
-        {profile?.role === 'athlete' && preset.showTestCalculator && (
+        {/* 初期テストガイド（選手のみ・ランニング系 or テスト割当あり） */}
+        {profile?.role === 'athlete' &&
+          (preset.showTestCalculator || (profile?.assignedTests?.length ?? 0) > 0) && (
           <Link
             href="/settings/tests"
             className="flex items-center justify-between rounded-xl border border-purple-700/50 bg-purple-950/20 p-6 hover:bg-purple-950/30 transition-colors"
@@ -91,7 +92,7 @@ export default function SettingsPage() {
               <div>
                 <h3 className="text-base font-semibold text-white">初期テストガイド</h3>
                 <p className="text-xs text-slate-400">
-                  20分走・5kmTT などから LTHR・閾値ペース・FTP を自動計算
+                  コーチ指定の体力テストを実施・記録（ランニングは LTHR・閾値ペース等を自動計算）
                 </p>
               </div>
             </div>

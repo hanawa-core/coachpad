@@ -16,6 +16,7 @@ import { PlanBadge } from '@/components/ui/PlanBadge'
 import { RunningSettingsPanel } from '@/components/athletes/RunningSettingsPanel'
 import { PLAN_CONFIG, type AthleteCache, type AthletePlan } from '@/types'
 import { presetOptions, getPreset, type ActivityPreset } from '@/lib/presets'
+import { groupedCatalog } from '@/lib/tests/catalog'
 
 export default function AthleteDetailPage() {
   const params = useParams()
@@ -24,10 +25,41 @@ export default function AthleteDetailPage() {
   const [athlete, setAthlete] = useState<AthleteCache | null>(null)
   const [planSaving, setPlanSaving] = useState(false)
   const [presetSaving, setPresetSaving] = useState(false)
+  const [assignedTests, setAssignedTests] = useState<string[]>([])
+  const [testsSaving, setTestsSaving] = useState(false)
+  const [testsSaved, setTestsSaved] = useState(false)
 
   useEffect(() => {
-    getAthleteCache(id).then(setAthlete)
+    getAthleteCache(id).then((a) => {
+      setAthlete(a)
+      setAssignedTests(a?.assignedTests ?? [])
+    })
   }, [id])
+
+  function toggleTest(key: string) {
+    setTestsSaved(false)
+    setAssignedTests((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    )
+  }
+
+  async function handleSaveTests() {
+    setTestsSaving(true)
+    try {
+      const idToken = await getAuth().currentUser?.getIdToken()
+      if (idToken) {
+        await fetch('/api/athletes/set-tests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+          body: JSON.stringify({ athleteId: id, assignedTests }),
+        })
+      }
+      setAthlete((prev) => (prev ? { ...prev, assignedTests } : prev))
+      setTestsSaved(true)
+    } finally {
+      setTestsSaving(false)
+    }
+  }
 
   async function handlePresetChange(activityPreset: ActivityPreset) {
     if (!athlete) return
@@ -174,6 +206,49 @@ export default function AthleteDetailPage() {
             </div>
           </div>
         )}
+
+        {/* フィジカルテスト割り当て */}
+        <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-base font-semibold text-white">フィジカルテスト設定</h3>
+            <button
+              onClick={handleSaveTests}
+              disabled={testsSaving}
+              className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-60"
+            >
+              {testsSaving ? '保存中...' : testsSaved ? '保存済' : '保存'}
+            </button>
+          </div>
+          <p className="mt-1 mb-3 text-xs text-slate-400">
+            この選手の競技に必要なテストを選択してください。選手の「初期テスト」画面に表示され、結果を記録できます。
+          </p>
+          <div className="space-y-3">
+            {groupedCatalog().map((group) => (
+              <div key={group.category}>
+                <p className="mb-1.5 text-xs font-medium text-slate-500">{group.label}</p>
+                <div className="flex flex-wrap gap-2">
+                  {group.tests.map((t) => {
+                    const on = assignedTests.includes(t.key)
+                    return (
+                      <button
+                        key={t.key}
+                        onClick={() => toggleTest(t.key)}
+                        title={t.howTo}
+                        className={`rounded-lg border px-2.5 py-1 text-xs transition-colors ${
+                          on
+                            ? 'border-emerald-500 bg-emerald-600/20 text-emerald-300'
+                            : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
+                        }`}
+                      >
+                        {t.name}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
         {athlete && getPreset(athlete.activityPreset as ActivityPreset).showRunningMetrics && (
           <RunningSettingsPanel athleteId={id} />

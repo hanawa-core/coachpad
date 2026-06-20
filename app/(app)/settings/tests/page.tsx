@@ -8,6 +8,8 @@ import { TopBar } from '@/components/layout/TopBar'
 import { updateUserProfile } from '@/lib/firebase/firestore'
 import { TestCalculator } from '@/components/running/TestCalculator'
 import type { TestResult } from '@/components/running/TestCalculator'
+import { getPreset } from '@/lib/presets'
+import { getTestDef, type TestDef } from '@/lib/tests/catalog'
 
 // ── テスト結果の蓄積 ───────────────────────────
 interface Accumulated {
@@ -84,6 +86,33 @@ export default function InitialTestsPage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
+  const preset = getPreset(profile?.activityPreset)
+  const assignedTests = (profile?.assignedTests ?? [])
+    .map(getTestDef)
+    .filter((t): t is TestDef => Boolean(t))
+  const [testValues, setTestValues] = useState<Record<string, string>>({})
+  const [resultsSaving, setResultsSaving] = useState(false)
+  const [resultsSaved, setResultsSaved] = useState(false)
+
+  const handleSaveResults = async () => {
+    if (!user) return
+    setResultsSaving(true)
+    try {
+      const updates: Record<string, { value: number; recordedAt: string }> = {
+        ...(profile?.testResults ?? {}),
+      }
+      const today = new Date().toISOString().slice(0, 10)
+      for (const [k, v] of Object.entries(testValues)) {
+        const num = parseFloat(v)
+        if (v.trim() && !Number.isNaN(num)) updates[k] = { value: num, recordedAt: today }
+      }
+      await updateUserProfile(user.uid, { testResults: updates })
+      setResultsSaved(true)
+    } finally {
+      setResultsSaving(false)
+    }
+  }
+
   if (profile?.role !== 'athlete') {
     return (
       <>
@@ -139,12 +168,68 @@ export default function InitialTestsPage() {
           <h2 className="text-base font-semibold text-white mb-1">初期テストについて</h2>
           <p className="text-sm text-slate-400 leading-relaxed">
             コーチがあなたに合ったメニューを作るために、まず現在の体力を数値で把握します。
-            最初に<span className="text-white font-medium">「20分全力走」</span>を1本行うだけで、
-            心拍ゾーンと閾値ペースが自動で設定されます。
+            コーチが指定したテストを実施して結果を記録してください。
           </p>
         </div>
 
-        {/* テスト一覧 */}
+        {/* コーチが割り当てたテスト */}
+        {assignedTests.length > 0 && (
+          <div className="rounded-xl border border-slate-800 bg-slate-900 p-5 space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-base font-semibold text-white">コーチ指定のテスト</h2>
+              <button
+                onClick={handleSaveResults}
+                disabled={resultsSaving}
+                className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-60"
+              >
+                {resultsSaving ? '保存中...' : resultsSaved ? '保存済' : '結果を保存'}
+              </button>
+            </div>
+            <div className="space-y-3">
+              {assignedTests.map((t) => {
+                const prev = profile?.testResults?.[t.key]
+                return (
+                  <div key={t.key} className="rounded-lg border border-slate-800 bg-slate-950 p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-sm font-semibold text-white">{t.name}</h3>
+                      <span className="text-xs text-slate-500">単位: {t.unit}</span>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-400 leading-relaxed">{t.howTo}</p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        value={testValues[t.key] ?? ''}
+                        onChange={(e) => {
+                          setTestValues((p) => ({ ...p, [t.key]: e.target.value }))
+                          setResultsSaved(false)
+                        }}
+                        placeholder="結果を入力"
+                        className="w-32 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white placeholder-slate-500"
+                      />
+                      <span className="text-xs text-slate-400">{t.unit}</span>
+                      {prev && (
+                        <span className="text-xs text-slate-500">（前回 {prev.value} ・ {prev.recordedAt}）</span>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* テスト未設定 */}
+        {assignedTests.length === 0 && !preset.showTestCalculator && (
+          <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
+            <p className="text-sm text-slate-400">
+              コーチがテストを設定すると、ここに表示され結果を記録できるようになります。
+            </p>
+          </div>
+        )}
+
+        {preset.showTestCalculator && (<>
+        {/* テスト一覧（ランニング） */}
         {TESTS.map((test) => (
           <div key={test.id} className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
             {/* ヘッダー */}
@@ -256,6 +341,8 @@ export default function InitialTestsPage() {
             )}
           </div>
         )}
+
+        </>)}
 
         {/* プロフィール編集へのリンク */}
         <p className="text-xs text-center text-slate-500">

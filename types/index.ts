@@ -82,6 +82,10 @@ export interface UserProfile {
   defaultActivityPreset?: ActivityPreset | null
   /** 管理者フラグ（運営者のみ。全ユーザー情報を閲覧可能） */
   isAdmin?: boolean | null
+  /** コーチが割り当てたフィジカルテスト（テストカタログのkey配列） */
+  assignedTests?: string[] | null
+  /** 選手が記録したテスト結果（testキー → 最新値） */
+  testResults?: Record<string, { value: number; recordedAt: string }> | null
 
   // ===== 拡張フィールド =====
   /** 性別 */
@@ -141,6 +145,8 @@ export interface AthleteCache {
   plan?: AthletePlan | null
   /** アクティビティプリセット（コーチダッシュボード用にデノーマライズ） */
   activityPreset?: ActivityPreset | null
+  /** コーチが割り当てたフィジカルテスト（デノーマライズ） */
+  assignedTests?: string[] | null
 }
 
 export interface LatestMetrics {
