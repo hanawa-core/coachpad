@@ -171,7 +171,13 @@ export default function WorkoutDetailPage() {
                 {preset.metrics.map((m) => (
                   <Row key={m.key} label={m.label} value={metricValue(m)} />
                 ))}
-                {preset.showTss && (
+                {preset.loadModel === 'srpe' && workout.completed.metrics?.sessionLoad != null && (
+                  <Row
+                    label="セッション負荷 (AU)"
+                    value={String(workout.completed.metrics.sessionLoad)}
+                  />
+                )}
+                {preset.loadModel === 'strava_ctl' && preset.showTss && (
                   <Row
                     label="TSS / CTL / ATL"
                     value={`${workout.completed.tss ?? '-'} / ${workout.completed.ctl ?? '-'} / ${workout.completed.atl ?? '-'}`}

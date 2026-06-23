@@ -6,6 +6,7 @@ import { Users, Calendar, Dumbbell, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { subscribeAthletes } from '@/lib/firebase/firestore'
 import { CoachWellnessAlert } from './CoachWellnessAlert'
+import { CoachLoadAlert } from './CoachLoadAlert'
 import { AiTeamAnalysis } from './AiTeamAnalysis'
 import { PlanBadge } from '@/components/ui/PlanBadge'
 import type { AthleteCache } from '@/types'
@@ -45,6 +46,9 @@ export function CoachDashboard() {
     <div className="space-y-6">
       {/* AI チーム分析 */}
       <AiTeamAnalysis coachId={user!.uid} />
+
+      {/* 負荷アラート（ACWR / TSB） */}
+      <CoachLoadAlert />
 
       {/* Wellness アラート */}
       <CoachWellnessAlert />

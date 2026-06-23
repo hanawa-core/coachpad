@@ -1,4 +1,5 @@
 import type { WorkoutType, CompletedWorkout } from '@/types'
+import type { LoadModel } from '@/lib/load/srpe'
 
 // ============================================================
 // アクティビティプリセット
@@ -67,6 +68,15 @@ export interface PresetConfig {
 
   // ===== 指標（記録フォーム + チャート駆動） =====
   metrics: MetricDef[]
+
+  // ===== 負荷モデル =====
+  /**
+   * このプリセットの既定の負荷モデル。
+   * - 'strava_ctl': Strava同期→TSS→CTL/ATL/TSB（既存パス。running のみ）
+   * - 'srpe': sRPE×時間→急性/慢性EWMA→ACWR（球技・対人・その他）
+   * 選手個別の上書きは UserProfile.loadModelOverride で行う（resolveLoadModel）。
+   */
+  loadModel: LoadModel
 
   // ===== ケイパビリティフラグ（ランニング専用機能のゲート） =====
   /** 距離/ペース/標高ブロック */

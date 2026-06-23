@@ -40,6 +40,8 @@ export const enthusiastPreset: PresetConfig = {
     { key: 'distanceKm', label: '距離', unit: 'km', inputType: 'number', step: '0.1', primary: false, field: 'distanceKm' },
   ],
 
+  loadModel: 'srpe',
+
   showRunningMetrics: false,
   showHrZones: false,
   showTss: false,

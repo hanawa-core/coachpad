@@ -10,12 +10,13 @@ import { TopBar } from '@/components/layout/TopBar'
 import { getAthleteCache, setAthletePlan, getUserProfile } from '@/lib/firebase/firestore'
 import { CalendarMonthView } from '@/components/calendar/CalendarMonthView'
 import { FitnessChart } from '@/components/dashboard/FitnessChart'
+import { SrpeLoadCard } from '@/components/dashboard/SrpeLoadCard'
 import { WeightTrendCard } from '@/components/dashboard/WeightTrendCard'
 import { WellnessChart } from '@/components/wellness/WellnessChart'
 import { PlanBadge } from '@/components/ui/PlanBadge'
 import { RunningSettingsPanel } from '@/components/athletes/RunningSettingsPanel'
-import { PLAN_CONFIG, type AthleteCache, type AthletePlan, type UserProfile } from '@/types'
-import { presetOptions, getPreset, type ActivityPreset } from '@/lib/presets'
+import { PLAN_CONFIG, type AthleteCache, type AthletePlan, type UserProfile, type LoadModel } from '@/types'
+import { presetOptions, getPreset, resolveLoadModel, type ActivityPreset } from '@/lib/presets'
 import { groupedCatalog, getTestDef } from '@/lib/tests/catalog'
 import { TestTrendChart } from '@/components/tests/TestTrendChart'
 import { AdherenceCard } from '@/components/dashboard/AdherenceCard'
@@ -27,6 +28,7 @@ export default function AthleteDetailPage() {
   const [athlete, setAthlete] = useState<AthleteCache | null>(null)
   const [planSaving, setPlanSaving] = useState(false)
   const [presetSaving, setPresetSaving] = useState(false)
+  const [loadModelSaving, setLoadModelSaving] = useState(false)
   const [assignedTests, setAssignedTests] = useState<string[]>([])
   const [testsSaving, setTestsSaving] = useState(false)
   const [testsSaved, setTestsSaved] = useState(false)
@@ -80,6 +82,24 @@ export default function AthleteDetailPage() {
       setAthlete((prev) => (prev ? { ...prev, activityPreset } : prev))
     } finally {
       setPresetSaving(false)
+    }
+  }
+
+  async function handleLoadModelChange(loadModelOverride: LoadModel | null) {
+    if (!athlete) return
+    setLoadModelSaving(true)
+    try {
+      const idToken = await getAuth().currentUser?.getIdToken()
+      if (idToken) {
+        await fetch('/api/athletes/set-load-model', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+          body: JSON.stringify({ athleteId: id, loadModelOverride }),
+        })
+      }
+      setAthlete((prev) => (prev ? { ...prev, loadModelOverride } : prev))
+    } finally {
+      setLoadModelSaving(false)
     }
   }
 
@@ -184,13 +204,38 @@ export default function AthleteDetailPage() {
               </p>
             </div>
 
-            {getPreset(athlete.activityPreset as ActivityPreset).showTss && (
-              <div className="mt-4 grid grid-cols-3 gap-4 text-center">
-                <Stat label="CTL" value={athlete.latestMetrics?.ctl?.toFixed(0) ?? '-'} />
-                <Stat label="ATL" value={athlete.latestMetrics?.atl?.toFixed(0) ?? '-'} />
-                <Stat label="TSB" value={athlete.latestMetrics?.tsb?.toFixed(0) ?? '-'} />
-              </div>
-            )}
+            {/* 負荷モデル（自動分岐 + 手動上書き） */}
+            <div className="mt-4">
+              <p className="mb-2 text-xs font-medium text-slate-400">負荷モデル</p>
+              <select
+                value={athlete.loadModelOverride ?? 'auto'}
+                onChange={(e) =>
+                  handleLoadModelChange(e.target.value === 'auto' ? null : (e.target.value as LoadModel))
+                }
+                disabled={loadModelSaving}
+                className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs text-white disabled:opacity-50"
+              >
+                <option value="auto">
+                  自動（{resolveLoadModel(athlete.activityPreset) === 'strava_ctl' ? 'CTL/ATL/TSB' : '負荷バランス(sRPE)'}）
+                </option>
+                <option value="strava_ctl">CTL/ATL/TSB（Strava・持久系）</option>
+                <option value="srpe">負荷バランス（sRPE・球技/対人）</option>
+              </select>
+              <p className="mt-2 text-xs text-slate-500">
+                現在の適用: {resolveLoadModel(athlete.activityPreset, athlete.loadModelOverride) === 'strava_ctl'
+                  ? 'CTL/ATL/TSB（Strava同期・既存）'
+                  : '負荷バランス（sRPE × 時間 → ACWR）'}
+              </p>
+            </div>
+
+            {resolveLoadModel(athlete.activityPreset, athlete.loadModelOverride) === 'strava_ctl' &&
+              getPreset(athlete.activityPreset as ActivityPreset).showTss && (
+                <div className="mt-4 grid grid-cols-3 gap-4 text-center">
+                  <Stat label="CTL" value={athlete.latestMetrics?.ctl?.toFixed(0) ?? '-'} />
+                  <Stat label="ATL" value={athlete.latestMetrics?.atl?.toFixed(0) ?? '-'} />
+                  <Stat label="TSB" value={athlete.latestMetrics?.tsb?.toFixed(0) ?? '-'} />
+                </div>
+              )}
 
             <div className="mt-4 flex flex-wrap gap-2">
               <Link
@@ -286,8 +331,14 @@ export default function AthleteDetailPage() {
           <RunningSettingsPanel athleteId={id} />
         )}
 
-        {athlete && getPreset(athlete.activityPreset as ActivityPreset).showTss && (
-          <FitnessChart athleteId={id} />
+        {athlete &&
+          resolveLoadModel(athlete.activityPreset, athlete.loadModelOverride) === 'strava_ctl' &&
+          getPreset(athlete.activityPreset as ActivityPreset).showTss && (
+            <FitnessChart athleteId={id} />
+          )}
+
+        {athlete && resolveLoadModel(athlete.activityPreset, athlete.loadModelOverride) === 'srpe' && (
+          <SrpeLoadCard athleteId={id} />
         )}
 
         {athlete && getPreset(athlete.activityPreset as ActivityPreset).primaryChart === 'weight' && (

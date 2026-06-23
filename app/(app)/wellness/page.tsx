@@ -6,6 +6,7 @@ import { TopBar } from '@/components/layout/TopBar'
 import { WellnessForm } from '@/components/wellness/WellnessForm'
 import { WellnessChart } from '@/components/wellness/WellnessChart'
 import { getRecentWellnessEntries } from '@/lib/firebase/firestore'
+import { resolveLoadModel } from '@/lib/presets'
 import type { WellnessEntry } from '@/types'
 import { Heart, Calendar, TrendingUp, PenLine } from 'lucide-react'
 
@@ -71,6 +72,9 @@ export default function WellnessPage() {
         {tab === 'record' && user && (
           <WellnessForm
             athleteId={user.uid}
+            showSessionLoad={
+              resolveLoadModel(profile?.activityPreset, profile?.loadModelOverride) === 'srpe'
+            }
             onSaved={() => {
               setRefreshKey((k) => k + 1)
               setTab('history')

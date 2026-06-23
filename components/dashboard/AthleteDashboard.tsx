@@ -10,18 +10,30 @@ import {
 } from '@/lib/firebase/firestore'
 import { TrainingLoadCard } from './TrainingLoadCard'
 import { FitnessChart } from './FitnessChart'
+import { SrpeLoadCard } from './SrpeLoadCard'
 import { WeightTrendCard } from './WeightTrendCard'
 import { TodayStrengthDetail } from './TodayStrengthDetail'
 import { WellnessQuickCard } from './WellnessQuickCard'
 import { WeeklySummary } from './WeeklySummary'
 import { AdherenceCard } from './AdherenceCard'
 import { PhaseTimelineCard } from './PhaseTimelineCard'
-import type { Workout, StrengthAssignment } from '@/types'
-import { getPreset, sessionLabel } from '@/lib/presets'
+import type { Workout, StrengthAssignment, LoadModel } from '@/types'
+import { getPreset, sessionLabel, resolveLoadModel } from '@/lib/presets'
 
 export function AthleteDashboard() {
   const { user, profile } = useAuth()
   const preset = getPreset(profile?.activityPreset)
+  // 実効負荷モデル（sportType≒プリセットから自動分岐 + コーチ上書き）
+  const loadModel = resolveLoadModel(profile?.activityPreset, profile?.loadModelOverride)
+  // 両データを持つ選手向けの表示切替（srpe かつ TSS 対応プリセットのみ提示）
+  // loadModel が変わったら（プロフィール読込時など）表示を既定へ同期する。
+  // effect ではなくレンダー中調整（React 推奨パターン）で cascading render を避ける。
+  const [loadView, setLoadView] = useState<LoadModel>(loadModel)
+  const [prevLoadModel, setPrevLoadModel] = useState<LoadModel>(loadModel)
+  if (prevLoadModel !== loadModel) {
+    setPrevLoadModel(loadModel)
+    setLoadView(loadModel)
+  }
   const [todaysWorkouts, setTodaysWorkouts] = useState<Workout[]>([])
   const [todaysStrength, setTodaysStrength] = useState<StrengthAssignment[]>([])
   const [loading, setLoading] = useState(true)
@@ -68,9 +80,49 @@ export function AthleteDashboard() {
       {/* 実施率 */}
       {user && <AdherenceCard athleteId={user.uid} />}
 
-      {/* トレーニング負荷・フィットネスチャート（TSS利用プリセットのみ） */}
-      {user && preset.showTss && <TrainingLoadCard athleteId={user.uid} />}
-      {user && preset.showTss && <FitnessChart athleteId={user.uid} />}
+      {/* 負荷管理 */}
+      {user && loadModel === 'strava_ctl' && preset.showTss && (
+        // strava_ctl（ランニング）: 既存の CTL/ATL/TSB 表示を維持（不変）
+        <>
+          <TrainingLoadCard athleteId={user.uid} />
+          <FitnessChart athleteId={user.uid} />
+        </>
+      )}
+
+      {user && loadModel === 'srpe' && (
+        <div className="space-y-4">
+          {/* 両データを持つ選手は CTL ⇄ sRPE を切替可能（TSS対応プリセットのみ） */}
+          {preset.showTss && (
+            <div className="flex gap-1 rounded-lg border border-slate-700 bg-slate-950 p-0.5 text-xs font-medium w-fit">
+              <button
+                onClick={() => setLoadView('srpe')}
+                className={`rounded px-3 py-1 transition-colors ${
+                  loadView === 'srpe' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                負荷バランス（sRPE）
+              </button>
+              <button
+                onClick={() => setLoadView('strava_ctl')}
+                className={`rounded px-3 py-1 transition-colors ${
+                  loadView === 'strava_ctl' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                CTL/ATL/TSB
+              </button>
+            </div>
+          )}
+
+          {loadView === 'srpe' ? (
+            <SrpeLoadCard athleteId={user.uid} />
+          ) : (
+            <>
+              <TrainingLoadCard athleteId={user.uid} />
+              <FitnessChart athleteId={user.uid} />
+            </>
+          )}
+        </div>
+      )}
 
       {/* 体重・体脂肪トレンド（体組成志向プリセット） */}
       {user && preset.primaryChart === 'weight' && <WeightTrendCard athleteId={user.uid} />}

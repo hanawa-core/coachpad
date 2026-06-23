@@ -49,6 +49,8 @@ export const athletePreset: PresetConfig = {
     { key: 'maxHeartRate', label: '最大心拍', unit: 'bpm', inputType: 'number', step: '1', primary: false, field: 'maxHeartRate' },
   ],
 
+  loadModel: 'srpe',
+
   showRunningMetrics: false,
   showHrZones: true,
   showTss: true,

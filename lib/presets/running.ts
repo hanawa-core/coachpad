@@ -60,6 +60,8 @@ export const runningPreset: PresetConfig = {
     { key: 'elevationGainM', label: '獲得標高', unit: 'm', inputType: 'number', step: '1', primary: false, field: 'elevationGainM' },
   ],
 
+  loadModel: 'strava_ctl',
+
   showRunningMetrics: true,
   showHrZones: true,
   showTss: true,

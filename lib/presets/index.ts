@@ -2,6 +2,7 @@ import type { WorkoutType } from '@/types'
 import { WORKOUT_TYPE_LABELS } from '@/types'
 import type { ActivityPreset, PresetConfig } from './types'
 import { DEFAULT_PRESET } from './types'
+import type { LoadModel } from '@/lib/load/srpe'
 import { runningPreset } from './running'
 import { juniorPreset } from './junior'
 import { athletePreset } from './athlete'
@@ -41,6 +42,20 @@ export function resolveActivityPreset(
   coachDefault: ActivityPreset | null | undefined
 ): ActivityPreset {
   return athletePreset ?? coachDefault ?? DEFAULT_PRESET
+}
+
+/**
+ * 実効負荷モデルの解決: 選手個別の上書き → プリセット既定。
+ * sportType（≒activityPreset）から自動分岐し、コーチが手動上書き可能。
+ *   run/trail（running プリセット）→ 'strava_ctl'（既存 CTL/ATL/TSB、不変）
+ *   それ以外 → 'srpe'
+ */
+export function resolveLoadModel(
+  preset: ActivityPreset | null | undefined,
+  override?: LoadModel | null
+): LoadModel {
+  if (override) return override
+  return getPreset(preset).loadModel
 }
 
 /** UIのドロップダウン用 {value,label} 一覧 */

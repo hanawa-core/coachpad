@@ -47,6 +47,8 @@ export const juniorPreset: PresetConfig = {
     { key: 'avgHeartRate', label: '平均心拍', unit: 'bpm', inputType: 'number', step: '1', primary: false, field: 'avgHeartRate' },
   ],
 
+  loadModel: 'srpe',
+
   showRunningMetrics: false,
   showHrZones: false,
   showTss: false,

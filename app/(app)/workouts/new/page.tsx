@@ -9,14 +9,21 @@ import { useAuth } from '@/components/providers/AuthProvider'
 import { TopBar } from '@/components/layout/TopBar'
 import { createCompletedWorkout } from '@/lib/firebase/firestore'
 import type { CompletedWorkout, WorkoutType } from '@/types'
-import { getPreset, sessionLabel } from '@/lib/presets'
+import { getPreset, sessionLabel, resolveLoadModel } from '@/lib/presets'
 import type { MetricDef } from '@/lib/presets'
+import { sessionLoad } from '@/lib/load/srpe'
 
 export default function NewWorkoutPage() {
   const router = useRouter()
   const { user, profile } = useAuth()
 
   const preset = useMemo(() => getPreset(profile?.activityPreset), [profile?.activityPreset])
+  // 実効負荷モデル: sportType(≒プリセット) から自動分岐 + コーチ上書き
+  const loadModel = useMemo(
+    () => resolveLoadModel(profile?.activityPreset, profile?.loadModelOverride),
+    [profile?.activityPreset, profile?.loadModelOverride]
+  )
+  const isSrpe = loadModel === 'srpe'
 
   const today = new Date().toISOString().split('T')[0]
   const [date, setDate] = useState(today)
@@ -24,12 +31,27 @@ export default function NewWorkoutPage() {
   const [workoutType, setWorkoutType] = useState<WorkoutType>(preset.defaultSessionType)
   // プリセット指標の入力値（MetricDef.key ごと）
   const [values, setValues] = useState<Record<string, string>>({})
-  // トレーニングロード（showTss プリセットのみ）
+  // sRPE 入力（srpe モデルのみ・必須）。RPE と時間は専用ブロックで扱う。
+  const [rpe, setRpe] = useState('')
+  const [durationMin, setDurationMin] = useState('')
+  // トレーニングロード（strava_ctl プリセットのみ・手入力）
   const [tss, setTss] = useState('')
   const [ctl, setCtl] = useState('')
   const [atl, setAtl] = useState('')
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  // srpe では RPE・時間を専用ブロックで扱うため、汎用指標レンダリングからは除外
+  const SRPE_HANDLED_KEYS = new Set(['rpe', 'durationMin'])
+  const renderedMetrics = isSrpe
+    ? preset.metrics.filter((m) => !SRPE_HANDLED_KEYS.has(m.key))
+    : preset.metrics
+
+  // sessionLoad プレビュー（RPE × 時間）
+  const rpeNum = rpe === '' ? null : parseFloat(rpe)
+  const durNum = durationMin === '' ? null : parseFloat(durationMin)
+  const previewLoad = sessionLoad(rpeNum, durNum)
+  const srpeReady = !isSrpe || previewLoad != null
 
   // プリセット確定（プロフィール読込後）に既定セッション種別へ同期。
   // 現在の選択がプリセットに存在しない場合のみ既定へ戻す（入力中の手動選択を保持）。
@@ -42,8 +64,8 @@ export default function NewWorkoutPage() {
   const setMetric = (key: string, v: string) =>
     setValues((prev) => ({ ...prev, [key]: v }))
 
-  const primaryMetrics = preset.metrics.filter((m) => m.primary)
-  const secondaryMetrics = preset.metrics.filter((m) => !m.primary)
+  const primaryMetrics = renderedMetrics.filter((m) => m.primary)
+  const secondaryMetrics = renderedMetrics.filter((m) => !m.primary)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -71,7 +93,7 @@ export default function NewWorkoutPage() {
       }
       const extraMetrics: Record<string, number | string | null> = {}
 
-      for (const m of preset.metrics) {
+      for (const m of renderedMetrics) {
         const raw = values[m.key]?.trim()
         if (!raw) continue
         const val: number | string = m.inputType === 'number' ? parseFloat(raw) : raw
@@ -84,10 +106,23 @@ export default function NewWorkoutPage() {
         }
       }
 
+      // sRPE: RPE × 時間 → sessionLoad を算出して保存
+      if (isSrpe) {
+        const load = sessionLoad(rpeNum, durNum)
+        if (load == null) {
+          // 念のためのガード（UI 側でも submit を無効化済み）
+          setSubmitting(false)
+          return
+        }
+        completed.durationMin = durNum
+        extraMetrics.rpe = rpeNum
+        extraMetrics.sessionLoad = load
+      }
+
       if (Object.keys(extraMetrics).length > 0) completed.metrics = extraMetrics
 
-      // トレーニングロード（プリセットが許可する場合のみ）
-      if (preset.showTss) {
+      // トレーニングロード（strava_ctl のみ手入力。srpe では sessionLoad を使うため出さない）
+      if (loadModel === 'strava_ctl' && preset.showTss) {
         completed.tss = tss ? parseFloat(tss) : null
         completed.ctl = ctl ? parseFloat(ctl) : null
         completed.atl = atl ? parseFloat(atl) : null
@@ -153,6 +188,65 @@ export default function NewWorkoutPage() {
             </select>
           </Field>
 
+          {/* セッション負荷（sRPE モデル・必須） */}
+          {isSrpe && (
+            <div className="rounded-lg border border-emerald-800/60 bg-emerald-950/20 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-sm font-semibold text-emerald-300">セッション負荷</p>
+                <span className="text-xs text-slate-400">RPE × 時間 で自動計算</span>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <div className="mb-1 flex items-center justify-between">
+                    <label className="text-xs font-medium text-slate-300">
+                      RPE（主観的運動強度・0〜10）<span className="text-red-400">*</span>
+                    </label>
+                    <span className="text-lg font-bold text-emerald-400">
+                      {rpe === '' ? '—' : Number(rpe)}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={10}
+                    step={1}
+                    value={rpe === '' ? 0 : rpe}
+                    onChange={(e) => setRpe(e.target.value)}
+                    className="w-full accent-emerald-500"
+                  />
+                  <div className="mt-0.5 flex justify-between text-[10px] text-slate-500">
+                    <span>0 安静</span>
+                    <span>5 ややきつい</span>
+                    <span>10 限界</span>
+                  </div>
+                </div>
+
+                <Field label="運動時間（分）*">
+                  <Input
+                    value={durationMin}
+                    onChange={setDurationMin}
+                    type="number"
+                    step="1"
+                    placeholder="例: 90"
+                  />
+                </Field>
+
+                <div className="flex items-center justify-between rounded-lg bg-slate-950 px-4 py-2.5">
+                  <span className="text-xs text-slate-400">セッション負荷 (AU)</span>
+                  <span className="text-xl font-bold text-white">
+                    {previewLoad != null ? previewLoad.toLocaleString() : '—'}
+                  </span>
+                </div>
+                {!srpeReady && (
+                  <p className="text-xs text-amber-400">
+                    RPE と時間（1分以上）を入力すると負荷が記録されます
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* 主指標 */}
           {primaryMetrics.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -174,8 +268,8 @@ export default function NewWorkoutPage() {
             </div>
           )}
 
-          {/* トレーニングロード（プリセット対応） */}
-          {preset.showTss && (
+          {/* トレーニングロード（strava_ctl プリセットのみ） */}
+          {loadModel === 'strava_ctl' && preset.showTss && (
             <div className="border-t border-slate-800 pt-4">
               <p className="mb-3 text-xs font-medium text-slate-400">
                 トレーニングロード（Garmin Connectなどから）
@@ -205,7 +299,7 @@ export default function NewWorkoutPage() {
 
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !srpeReady}
             className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-60"
           >
             {submitting ? '保存中...' : '記録'}

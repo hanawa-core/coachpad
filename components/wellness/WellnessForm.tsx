@@ -1,14 +1,17 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Heart, Moon, Battery, Smile, Brain, Activity, Scale, Save, Check } from 'lucide-react'
+import { Heart, Moon, Battery, Smile, Brain, Activity, Scale, Save, Check, Flame } from 'lucide-react'
 import { saveWellnessEntry, getWellnessEntry } from '@/lib/firebase/firestore'
 import type { WellnessScore } from '@/types'
+import { sessionLoad } from '@/lib/load/srpe'
 
 interface Props {
   athleteId: string
   date?: string
   onSaved?: () => void
+  /** sRPE 負荷モデルの選手向けに「今日のRPE×時間」入力を表示する */
+  showSessionLoad?: boolean
 }
 
 const SCORE_LABELS: Record<string, [string, string]> = {
@@ -20,10 +23,12 @@ const SCORE_LABELS: Record<string, [string, string]> = {
   stress: ['なし', '極度'],
 }
 
-export function WellnessForm({ athleteId, date: dateProp, onSaved }: Props) {
+export function WellnessForm({ athleteId, date: dateProp, onSaved, showSessionLoad = false }: Props) {
   const today = new Date().toISOString().split('T')[0]
   const date = dateProp ?? today
 
+  const [sessionRpe, setSessionRpe] = useState('')
+  const [sessionDurationMin, setSessionDurationMin] = useState('')
   const [sleepHours, setSleepHours] = useState('')
   const [sleepQuality, setSleepQuality] = useState<WellnessScore | null>(null)
   const [soreness, setSoreness] = useState<WellnessScore | null>(null)
@@ -41,6 +46,8 @@ export function WellnessForm({ athleteId, date: dateProp, onSaved }: Props) {
   useEffect(() => {
     getWellnessEntry(athleteId, date).then((entry) => {
       if (entry) {
+        setSessionRpe(entry.sessionRpe?.toString() ?? '')
+        setSessionDurationMin(entry.sessionDurationMin?.toString() ?? '')
         setSleepHours(entry.sleepHours?.toString() ?? '')
         setSleepQuality(entry.sleepQuality)
         setSoreness(entry.soreness)
@@ -62,6 +69,9 @@ export function WellnessForm({ athleteId, date: dateProp, onSaved }: Props) {
     setSaving(true)
     try {
       await saveWellnessEntry(athleteId, date, {
+        sessionRpe: showSessionLoad && sessionRpe !== '' ? parseFloat(sessionRpe) : null,
+        sessionDurationMin:
+          showSessionLoad && sessionDurationMin !== '' ? parseFloat(sessionDurationMin) : null,
         sleepHours: sleepHours ? parseFloat(sleepHours) : null,
         sleepQuality,
         soreness,
@@ -101,6 +111,66 @@ export function WellnessForm({ athleteId, date: dateProp, onSaved }: Props) {
           </span>
         )}
       </div>
+
+      {/* 今日のセッション負荷（sRPE 選手のみ） */}
+      {showSessionLoad && (
+        <div className="rounded-lg border border-emerald-800/60 bg-emerald-950/20 p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <Flame className="h-4 w-4 text-emerald-400" />
+            <span className="text-sm font-semibold text-emerald-300">今日のトレーニング負荷</span>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="text-xs font-medium text-slate-300">RPE（主観的運動強度・0〜10）</label>
+                <span className="text-lg font-bold text-emerald-400">
+                  {sessionRpe === '' ? '—' : Number(sessionRpe)}
+                </span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={10}
+                step={1}
+                value={sessionRpe === '' ? 0 : sessionRpe}
+                onChange={(e) => setSessionRpe(e.target.value)}
+                className="w-full accent-emerald-500"
+              />
+              <div className="mt-0.5 flex justify-between text-[10px] text-slate-500">
+                <span>0 安静</span>
+                <span>5 ややきつい</span>
+                <span>10 限界</span>
+              </div>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-300">運動時間（分）</label>
+              <input
+                type="number"
+                step="1"
+                value={sessionDurationMin}
+                onChange={(e) => setSessionDurationMin(e.target.value)}
+                placeholder="例: 90"
+                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+              />
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-slate-950 px-4 py-2.5">
+              <span className="text-xs text-slate-400">セッション負荷 (AU)</span>
+              <span className="text-xl font-bold text-white">
+                {(() => {
+                  const load = sessionLoad(
+                    sessionRpe === '' ? null : parseFloat(sessionRpe),
+                    sessionDurationMin === '' ? null : parseFloat(sessionDurationMin)
+                  )
+                  return load != null ? load.toLocaleString() : '—'
+                })()}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500">
+              練習・試合をした日は RPE と時間を入力すると、負荷バランス（ACWR）に反映されます。休養日は空欄でOK。
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* スコアグループ */}
       <div className="space-y-4">

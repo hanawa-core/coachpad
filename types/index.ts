@@ -1,7 +1,9 @@
 import { Timestamp } from 'firebase/firestore'
 import type { ActivityPreset } from '@/lib/presets/types'
+import type { LoadModel } from '@/lib/load/srpe'
 
 export type { ActivityPreset } from '@/lib/presets/types'
+export type { LoadModel } from '@/lib/load/srpe'
 
 // ============================================================
 // ユーザー・ロール
@@ -78,6 +80,12 @@ export interface UserProfile {
   plan?: AthletePlan | null
   /** アクティビティプリセット（選手の実効値。未設定は running 扱い） */
   activityPreset?: ActivityPreset | null
+  /**
+   * 負荷モデルの手動上書き（コーチが設定）。
+   * 未設定ならプリセットの既定（resolveLoadModel）。
+   * 1人が Strava(CTL) と sRPE 両方のデータを持つケースの切替に使用。
+   */
+  loadModelOverride?: LoadModel | null
   /** コーチが新規選手に適用する既定プリセット（コーチのみ） */
   defaultActivityPreset?: ActivityPreset | null
   /** 管理者フラグ（運営者のみ。全ユーザー情報を閲覧可能） */
@@ -147,6 +155,8 @@ export interface AthleteCache {
   plan?: AthletePlan | null
   /** アクティビティプリセット（コーチダッシュボード用にデノーマライズ） */
   activityPreset?: ActivityPreset | null
+  /** 負荷モデルの手動上書き（コーチダッシュボード用にデノーマライズ） */
+  loadModelOverride?: LoadModel | null
   /** コーチが割り当てたフィジカルテスト（デノーマライズ） */
   assignedTests?: string[] | null
 }
@@ -554,6 +564,13 @@ export interface WellnessEntry {
   weight: number | null
   /** 備考 */
   notes: string
+  /**
+   * その日のセッションRPE（0〜10, Borg CR-10）。sRPE 負荷モデル用。
+   * 毎日の体調記録と同時に入力し、ACWR に反映される。
+   */
+  sessionRpe?: number | null
+  /** その日の運動時間（分）。sessionRpe と掛けて sessionLoad を算出。 */
+  sessionDurationMin?: number | null
   createdAt: Timestamp
   updatedAt: Timestamp
 }
